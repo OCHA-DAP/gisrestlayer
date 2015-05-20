@@ -5,6 +5,7 @@ import shutil
 import flask
 import requests
 import urlparse
+import subprocess
 
 import api.helpers.zip as zip
 
@@ -27,7 +28,8 @@ def add_layer(dataset_id, resource_id):
         'error_type': 'Timeout',
     }
     # url = 'https://data.hdx.rwlabs.org/dataset/lsib-simplified-shoreline/resource_download/d20c3101-7585-4145-a579-6acec7aadf61'
-    download_file(resource_id, download_url)
+    file_to_be_pushed = download_file(resource_id, download_url)
+    push_file_to_postgis(file_to_be_pushed, resource_id)
     return jsonify(data_dict)
 
 
@@ -104,3 +106,31 @@ def _get_filename(response, url):
             if file_name.split(".")[-1].lower() in ['json', 'geojson', 'zip']:
                 return file_name
     raise ValueError('Filename could not be found')
+
+
+def push_file_to_postgis(filepath, resource_id):
+    db_host = app.config.get('DB_HOST','db')
+    db_name = app.config.get('DB_NAME','gis')
+    db_user = app.config.get('DB_USER','ckan')
+
+    execute = [
+        'ogr2ogr',
+        '-f',
+        '"PostgreSQL"',
+        'PG:host={} dbname={} user={}'.format(db_host, db_name, db_user),
+        '{}'.format(filepath),
+        '-nln',
+        resource_id,
+        '-overwrite',
+        '-fieldTypeToString',
+        'Real'
+    ]
+    try:
+        output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
+        app.logger.info('Pushed {} successfully to table {}'.format(filepath, resource_id))
+    except subprocess.CalledProcessError, e:
+        pass
+        app.logger.warning(str(e))
+        output = e.output
+
+    app.logger.debug('ogr2ogr output: {}'.format(output))
