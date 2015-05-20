@@ -1,5 +1,5 @@
 import config.app_config as app_config
-import api_controller.import_api as import_api
+import api.import_api as import_api
 from flask import Flask
 
 
