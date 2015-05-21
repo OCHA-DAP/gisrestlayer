@@ -6,7 +6,7 @@ from flask import Flask
 
 app = Flask(__name__)
 app.config.from_object('config.app_config.Config')
-# app.config.from_envvar('YOURAPPLICATION_SETTINGS')
+app.config.from_envvar('GIS_REST_LAYER_CONF')
 
 
 app.register_blueprint(import_api.import_api)

@@ -30,6 +30,8 @@ def add_layer(dataset_id, resource_id):
     # url = 'https://data.hdx.rwlabs.org/dataset/lsib-simplified-shoreline/resource_download/d20c3101-7585-4145-a579-6acec7aadf61'
     file_to_be_pushed = download_file(resource_id, download_url)
     push_file_to_postgis(file_to_be_pushed, resource_id)
+    notify_gis_server(resource_id)
+
     return jsonify(data_dict)
 
 
@@ -134,3 +136,10 @@ def push_file_to_postgis(filepath, resource_id):
         output = e.output
 
     app.logger.debug('ogr2ogr output: {}'.format(output))
+
+
+def notify_gis_server(resource_id):
+    gis_api_url = app.config.get('GIS_API_PATTERN').format(table_name=resource_id)
+    r = requests.get(gis_api_url)
+    r.raise_for_status()
+    r.close()
