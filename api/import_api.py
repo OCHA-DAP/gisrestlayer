@@ -6,6 +6,7 @@ import flask
 import requests
 import urlparse
 import subprocess
+import logging
 
 import api.helpers.zip as zip
 
@@ -13,6 +14,8 @@ Flask = flask.Flask
 jsonify = flask.jsonify
 request = flask.request
 Blueprint = flask.Blueprint
+
+logger = logging.getLogger(__name__)
 
 app = flask.current_app
 
@@ -46,7 +49,7 @@ def download_file(resource_id, url):
 
     content_length = r.headers.get('Content-Length')
     if not content_length:
-        app.logger.warning('Content length not specified in HTTP response for url: '.format(url))
+        logger.warning('Content length not specified in HTTP response for url: '.format(url))
     elif int(content_length) > max_file_size:
         raise ValueError('response too large')
 
@@ -71,7 +74,7 @@ def download_file(resource_id, url):
                     fh.write(chunk)
                 file_to_be_pushed = filepath
             except Exception as e:
-                    app.logger.error('Exception occured while downloading file {}: {}'.format(filepath, str(e)))
+                    logger.error('Exception occured while downloading file {}: {}'.format(filepath, str(e)))
                     raise e
             finally:
                 r.close()
@@ -81,7 +84,7 @@ def download_file(resource_id, url):
             zip_helper.unzip()
             file_to_be_pushed = zip_helper.find_layer_file()
 
-        app.logger.info('File {} will be pushed to PostGIS'.format(file_to_be_pushed))
+        logger.warning('File {} will be pushed to PostGIS'.format(file_to_be_pushed))
         return file_to_be_pushed
 
 
@@ -92,7 +95,7 @@ def _create_download_dir(dir):
         os.makedirs(dir)
         return True
     except Exception as e:
-        app.logger.error('A problem occured while creating folder {}: {}'.format(dir, str(e)))
+        logger.error('A problem occured while creating folder {}: {}'.format(dir, str(e)))
         return False
 
 
@@ -129,13 +132,13 @@ def push_file_to_postgis(filepath, resource_id):
     ]
     try:
         output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
-        app.logger.info('Pushed {} successfully to table {}'.format(filepath, resource_id))
+        logger.info('Pushed {} successfully to table {}'.format(filepath, resource_id))
     except subprocess.CalledProcessError, e:
         pass
-        app.logger.warning(str(e))
+        logger.warning(str(e))
         output = e.output
 
-    app.logger.debug('ogr2ogr output: {}'.format(output))
+    logger.debug('ogr2ogr output: {}'.format(output))
 
 
 def notify_gis_server(resource_id):

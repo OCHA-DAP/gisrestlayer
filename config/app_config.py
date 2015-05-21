@@ -1,7 +1,7 @@
 
 
 class Config(object):
-    DEBUG = True
+    DEBUG = False
     MAX_FILE_SIZE_MB = 100
     TIMEOUT_SEC = 120
 
@@ -10,3 +10,5 @@ class Config(object):
     DB_HOST = 'db'
 
     GIS_API_PATTERN = 'http://localhost/services/tables/{table_name}'
+
+    LOGGING_CONF_FILE = 'logging.conf'
