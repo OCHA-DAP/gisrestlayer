@@ -9,6 +9,7 @@ import subprocess
 import logging
 
 import api.helpers.zip as zip
+import api.exceptions.exceptions as exceptions
 
 Flask = flask.Flask
 jsonify = flask.jsonify
@@ -28,12 +29,24 @@ def add_layer(dataset_id, resource_id):
     data_dict = {
         'success': 'true',
         'message': 'Import successful',
-        'error_type': 'Timeout',
+        'error_type': 'None',
+        'error_class': 'None'
     }
     # url = 'https://data.hdx.rwlabs.org/dataset/lsib-simplified-shoreline/resource_download/d20c3101-7585-4145-a579-6acec7aadf61'
-    file_to_be_pushed = download_file(resource_id, download_url)
-    push_file_to_postgis(file_to_be_pushed, resource_id)
-    notify_gis_server(resource_id)
+    try:
+        file_to_be_pushed = download_file(resource_id, download_url)
+        push_file_to_postgis(file_to_be_pushed, resource_id)
+        notify_gis_server(resource_id)
+    except Exception, e:
+        data_dict['success'] = False
+        data_dict['message'] = str(e)
+        data_dict['error_class'] = type(e).__name__
+        try:
+            data_dict['type'] = e.type
+        except AttributeError,e:
+            data_dict['type'] = 'unknown'
+
+
 
     return jsonify(data_dict)
 
@@ -51,7 +64,7 @@ def download_file(resource_id, url):
     if not content_length:
         logger.warning('Content length not specified in HTTP response for url: '.format(url))
     elif int(content_length) > max_file_size:
-        raise ValueError('response too large')
+        raise exceptions.FileTooLargeException('response too large')
 
     size = 0
     start = time.time()
@@ -60,32 +73,37 @@ def download_file(resource_id, url):
     extension = os.path.splitext(filepath)[1]
 
     file_to_be_pushed = None
-    if _create_download_dir(dir):
-        with open(filepath, "wb") as fh:
-            try:
-                for chunk in r.iter_content(chunk_size):
-                    if time.time() - start > timeout:
-                        raise ValueError('timeout reached')
 
-                    size += len(chunk)
-                    if size > max_file_size:
-                        raise ValueError('response too large')
+    _create_download_dir(dir)
 
-                    fh.write(chunk)
-                file_to_be_pushed = filepath
-            except Exception as e:
-                    logger.error('Exception occured while downloading file {}: {}'.format(filepath, str(e)))
-                    raise e
-            finally:
-                r.close()
+    with open(filepath, "wb") as fh:
+        try:
+            for chunk in r.iter_content(chunk_size):
+                if time.time() - start > timeout:
+                    logger.error('Timeout while downloading file {}'.format(url))
+                    raise exceptions.TimeoutException('timeout reached')
 
-        if extension == '.zip':
-            zip_helper = zip.Unzipper(filepath)
-            zip_helper.unzip()
-            file_to_be_pushed = zip_helper.find_layer_file()
+                size += len(chunk)
+                if size > max_file_size:
+                    logger.error('Size exceeded while downloading file {}'.format(url))
+                    raise exceptions.FileTooLargeException('response too large')
 
-        logger.warning('File {} will be pushed to PostGIS'.format(file_to_be_pushed))
-        return file_to_be_pushed
+                fh.write(chunk)
+            file_to_be_pushed = filepath
+        except Exception as e:
+                logger.error('Exception occured while downloading file {}: {}'.format(filepath, str(e)))
+                raise e
+        finally:
+            r.close()
+
+    if extension == '.zip':
+        zip_helper = zip.Unzipper(filepath)
+        zip_helper.unzip()
+        file_to_be_pushed = zip_helper.find_layer_file()
+
+    logger.info('File {} will be pushed to PostGIS'.format(file_to_be_pushed))
+    return file_to_be_pushed
+
 
 
 def _create_download_dir(dir):
@@ -93,10 +111,10 @@ def _create_download_dir(dir):
         if os.path.exists(dir):
             shutil.rmtree(dir)
         os.makedirs(dir)
-        return True
     except Exception as e:
-        logger.error('A problem occured while creating folder {}: {}'.format(dir, str(e)))
-        return False
+        msg = 'A problem occured while creating folder {}: {}'.format(dir, str(e))
+        logger.error(msg)
+        raise exceptions.FolderCreationException(msg, e)
 
 
 def _get_filename(response, url):
@@ -113,7 +131,7 @@ def _get_filename(response, url):
     raise ValueError('Filename could not be found')
 
 
-def push_file_to_postgis(filepath, resource_id):
+def push_file_to_postgis(filepath, resource_id, additional_params=None):
     db_host = app.config.get('DB_HOST','db')
     db_name = app.config.get('DB_NAME','gis')
     db_user = app.config.get('DB_USER','ckan')
@@ -130,6 +148,8 @@ def push_file_to_postgis(filepath, resource_id):
         '-fieldTypeToString',
         'Real'
     ]
+    if additional_params:
+        execute = execute + additional_params
     try:
         output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
         logger.info('Pushed {} successfully to table {}'.format(filepath, resource_id))
@@ -137,8 +157,18 @@ def push_file_to_postgis(filepath, resource_id):
         pass
         logger.warning(str(e))
         output = e.output
+        logger.debug('ogr2ogr output: {}'.format(output))
 
-    logger.debug('ogr2ogr output: {}'.format(output))
+        # avoid infinte cycles
+        if not additional_params and 'does not match column type (Polygon)' in output:
+            logger.debug('Geometry type problem. Trying to force MultiPolygon geometry for file {}'.format(filepath))
+            push_file_to_postgis(filepath, resource_id, ['-nlt','MultiPolygon'])
+        elif not additional_params and 'does not match column type (LineString)' in output:
+            logger.debug('Geometry type problem. Trying to force MultiLineString geometry for file {}'.format(filepath))
+            push_file_to_postgis(filepath, resource_id, ['-nlt','MultiLineString'])
+        else:
+            raise exceptions.PushingToPostgisException('Problem while trying to push data to postgis')
+
 
 
 def notify_gis_server(resource_id):
