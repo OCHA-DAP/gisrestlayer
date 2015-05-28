@@ -17,3 +17,6 @@ class FolderCreationException(GisRestLayerException):
 
 class PushingToPostgisException(GisRestLayerException):
     type = 'pushing-to-postgis-problem'
+
+class MissingUrlException(GisRestLayerException):
+    type = 'missing-url'

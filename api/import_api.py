@@ -7,6 +7,7 @@ import requests
 import urlparse
 import subprocess
 import logging
+import hashlib
 
 import api.helpers.zip as zip
 import api.exceptions.exceptions as exceptions
@@ -15,6 +16,7 @@ Flask = flask.Flask
 jsonify = flask.jsonify
 request = flask.request
 Blueprint = flask.Blueprint
+make_response = flask.make_response
 
 logger = logging.getLogger(__name__)
 
@@ -23,18 +25,21 @@ app = flask.current_app
 import_api = Blueprint('import_api', __name__)
 
 
-@import_api.route('/api/add-layer/<string:dataset_id>/<string:resource_id>', methods=['GET'])
+@import_api.route('/api/add-layer/dataset/<string:dataset_id>/resource/<string:resource_id>', methods=['GET'])
 def add_layer(dataset_id, resource_id):
-    download_url = request.args.get('resource_download_url', '')
     data_dict = {
         'success': 'true',
         'message': 'Import successful',
+        'layer_id': 'None',
         'error_type': 'None',
         'error_class': 'None'
     }
     # url = 'https://data.hdx.rwlabs.org/dataset/lsib-simplified-shoreline/resource_download/d20c3101-7585-4145-a579-6acec7aadf61'
     try:
-        file_to_be_pushed = download_file(resource_id, download_url)
+        download_url = _get_download_url(request)
+        layer_id = generate_layer_id(dataset_id, download_url)
+        data_dict['layer_id'] = layer_id
+        file_to_be_pushed = download_file(layer_id, download_url)
         push_file_to_postgis(file_to_be_pushed, resource_id)
         notify_gis_server(resource_id)
     except Exception, e:
@@ -46,12 +51,10 @@ def add_layer(dataset_id, resource_id):
         except AttributeError,e:
             data_dict['type'] = 'unknown'
 
-
-
     return jsonify(data_dict)
 
 
-def download_file(resource_id, url):
+def download_file(layer_id, url):
     max_file_size = int(app.config.get('MAX_FILE_SIZE_MB','1')) * 1024 * 1024
     timeout = int (app.config.get('TIMEOUT_SEC', '1'))
     chunk_size = 1024*1024  # 1 MB
@@ -68,7 +71,7 @@ def download_file(resource_id, url):
 
     size = 0
     start = time.time()
-    dir = '/tmp/' + resource_id
+    dir = '/tmp/' + layer_id
     filepath = dir + '/' + _get_filename(r, url)
     extension = os.path.splitext(filepath)[1]
 
@@ -114,7 +117,7 @@ def _create_download_dir(dir):
     except Exception as e:
         msg = 'A problem occured while creating folder {}: {}'.format(dir, str(e))
         logger.error(msg)
-        raise exceptions.FolderCreationException(msg, e)
+        raise exceptions.FolderCreationException(msg, [e])
 
 
 def _get_filename(response, url):
@@ -145,6 +148,8 @@ def push_file_to_postgis(filepath, resource_id, additional_params=None):
         '-nln',
         resource_id,
         '-overwrite',
+        '-lco',
+        'OVERWRITE=YES',
         '-fieldTypeToString',
         'Real'
     ]
@@ -176,3 +181,15 @@ def notify_gis_server(resource_id):
     r = requests.get(gis_api_url)
     r.raise_for_status()
     r.close()
+
+
+def generate_layer_id(dataset_id, url):
+    layer_id = "{}_{}".format(dataset_id, hashlib.md5(url).hexdigest())
+    return layer_id
+
+
+def _get_download_url(request):
+    try:
+        request.args['resource_download_url']
+    except Exception, e:
+        raise exceptions.MissingUrlException("Url missing or has a problem", [e])
