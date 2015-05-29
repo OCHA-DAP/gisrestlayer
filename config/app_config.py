@@ -2,6 +2,7 @@
 
 class Config(object):
     DEBUG = False
+    APP_PORT = 5000
     MAX_FILE_SIZE_MB = 100
     TIMEOUT_SEC = 120
 

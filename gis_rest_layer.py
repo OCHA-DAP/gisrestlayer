@@ -31,6 +31,6 @@ def page_not_found(error):
 app.register_blueprint(import_api.import_api)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',port=app.config.get('APP_PORT', '5000'))
 
 
