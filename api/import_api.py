@@ -40,8 +40,8 @@ def add_layer(dataset_id, resource_id):
         layer_id = generate_layer_id(dataset_id, download_url)
         data_dict['layer_id'] = layer_id
         file_to_be_pushed = download_file(layer_id, download_url)
-        push_file_to_postgis(file_to_be_pushed, resource_id)
-        notify_gis_server(resource_id)
+        push_file_to_postgis(file_to_be_pushed, layer_id)
+        notify_gis_server(layer_id)
     except Exception, e:
         data_dict['success'] = False
         data_dict['message'] = str(e)
@@ -184,12 +184,13 @@ def notify_gis_server(resource_id):
 
 
 def generate_layer_id(dataset_id, url):
-    layer_id = "{}_{}".format(dataset_id, hashlib.md5(url).hexdigest())
+    dataset_prefix = ''.join(i if i.isalnum() else '_' for i in dataset_id)
+    layer_id = "{}_{}".format(dataset_prefix, hashlib.md5(url).hexdigest())
     return layer_id
 
 
 def _get_download_url(request):
     try:
-        request.args['resource_download_url']
+        return request.args['resource_download_url']
     except Exception, e:
         raise exceptions.MissingUrlException("Url missing or has a problem", [e])
