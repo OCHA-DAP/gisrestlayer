@@ -184,7 +184,7 @@ def notify_gis_server(resource_id):
 
 
 def generate_layer_id(dataset_id, url):
-    dataset_prefix = ''.join(i if i.isalnum() else '_' for i in dataset_id)
+    dataset_prefix = ''.join(i if i.isalnum() else '_' for i in dataset_id[0:10])
     layer_id = "{}_{}".format(dataset_prefix, hashlib.md5(url).hexdigest())
     return layer_id
 
