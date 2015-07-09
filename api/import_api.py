@@ -41,6 +41,8 @@ def add_layer(dataset_id, resource_id):
         data_dict['layer_id'] = layer_id
         file_to_be_pushed = download_file(layer_id, download_url)
         push_file_to_postgis(file_to_be_pushed, layer_id)
+        bounding_box = fetch_bounding_box(layer_id)
+        data_dict['bounding_box'] = bounding_box
         notify_gis_server(layer_id)
     except Exception, e:
         data_dict['success'] = False
@@ -135,9 +137,7 @@ def _get_filename(response, url):
 
 
 def push_file_to_postgis(filepath, resource_id, additional_params=None):
-    db_host = app.config.get('DB_HOST','db')
-    db_name = app.config.get('DB_NAME','gis')
-    db_user = app.config.get('DB_USER','ckan')
+    db_host, db_name, db_user = _get_db_params()
 
     execute = [
         'ogr2ogr',
@@ -159,7 +159,6 @@ def push_file_to_postgis(filepath, resource_id, additional_params=None):
         output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
         logger.info('Pushed {} successfully to table {}'.format(filepath, resource_id))
     except subprocess.CalledProcessError, e:
-        pass
         logger.warning(str(e))
         output = e.output
         logger.debug('ogr2ogr output: {}'.format(output))
@@ -174,6 +173,34 @@ def push_file_to_postgis(filepath, resource_id, additional_params=None):
         else:
             raise exceptions.PushingToPostgisException('Problem while trying to push data to postgis')
 
+
+
+def fetch_bounding_box(resource_id):
+
+    db_host, db_name, db_user = _get_db_params()
+    sql_query = 'select ST_Extent(wkb_geometry) as table_extent from {}'.format(resource_id)
+
+    execute = [
+        'psql',
+        '-U',
+        db_user,
+        '-h',
+        db_host,
+        '-c',
+        sql_query,
+        '-t', # turn off table header and row count
+        db_name
+    ]
+
+    try:
+        logger.debug('Starting to fetch bounding boxfor resource {}'.format(resource_id))
+        output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
+        logger.info('Fetched bounding box. "{}" for resource {}'.format(output, resource_id))
+        return output
+    except subprocess.CalledProcessError, e:
+        logger.warning(str(e))
+        output = e.output
+        raise exceptions.FetchBoundingBoxException(output)
 
 
 def notify_gis_server(resource_id):
@@ -194,3 +221,9 @@ def _get_download_url(request):
         return request.args['resource_download_url']
     except Exception, e:
         raise exceptions.MissingUrlException("Url missing or has a problem", [e])
+
+def _get_db_params():
+    db_host = app.config.get('DB_HOST', 'db')
+    db_name = app.config.get('DB_NAME', 'gis')
+    db_user = app.config.get('DB_USER', 'ckan')
+    return db_host, db_name, db_user

@@ -20,3 +20,6 @@ class PushingToPostgisException(GisRestLayerException):
 
 class MissingUrlException(GisRestLayerException):
     type = 'missing-url'
+
+class FetchBoundingBoxException(GisRestLayerException):
+    type = 'fetch-bounding-box-problem'
