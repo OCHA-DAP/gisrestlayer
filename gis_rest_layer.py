@@ -4,15 +4,19 @@ import flask
 import logging
 import logging.config
 
+import rq_dashboard
+
+g = flask.g
 Flask = flask.Flask
 make_response = flask.make_response
 jsonify = flask.jsonify
 
 app = Flask(__name__)
+
+
 app.config.from_object('config.app_config.Config')
 app.config.from_envvar('GIS_REST_LAYER_CONF')
-
-
+app.config['DEBUG'] = False
 
 logging.config.fileConfig(app.config.get('LOGGING_CONF_FILE'))
 logger = logging.getLogger(__name__)
@@ -28,9 +32,11 @@ def page_not_found(error):
         'error_class': 'none'
     }
 
+
+
 app.register_blueprint(import_api.import_api)
 
+rq_dashboard.RQDashboard(app, url_prefix='/monitor')
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=app.config.get('APP_PORT', '5000'))
-
-
+    app.run(host='0.0.0.0', port=app.config.get('APP_PORT', '5000'), processes=1 )

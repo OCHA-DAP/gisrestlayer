@@ -23,3 +23,6 @@ class MissingUrlException(GisRestLayerException):
 
 class FetchBoundingBoxException(GisRestLayerException):
     type = 'fetch-bounding-box-problem'
+
+class WrongConfigurationException(GisRestLayerException):
+    type = 'wrong-configuration'
