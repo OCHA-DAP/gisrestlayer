@@ -141,7 +141,7 @@ class CreatePreviewTask(object):
                     return file_name
         raise ValueError('Filename could not be found')
 
-    def push_file_to_postgis(self, filepath, resource_id, additional_params=None):
+    def push_file_to_postgis(self, filepath, resource_id, additional_params=None, additional_env=None):
 
         execute = [
             'ogr2ogr',
@@ -160,7 +160,12 @@ class CreatePreviewTask(object):
         if additional_params:
             execute = execute + additional_params
         try:
-            output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
+            if not additional_env:
+                output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
+            else:
+                my_env = os.environ.copy()
+                my_env.update(additional_env)
+                output = subprocess.check_output(execute, stderr=subprocess.STDOUT, env=my_env)
             logger.info('Pushed {} successfully to table {}'.format(filepath, resource_id))
         except subprocess.CalledProcessError, e:
             logger.warning(str(e))
@@ -171,11 +176,15 @@ class CreatePreviewTask(object):
             if not additional_params and 'does not match column type (Polygon)' in output:
                 logger.debug(
                     'Geometry type problem. Trying to force MultiPolygon geometry for file {}'.format(filepath))
-                self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiPolygon'])
+                self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiPolygon'], additional_env)
             elif not additional_params and 'does not match column type (LineString)' in output:
                 logger.debug(
                     'Geometry type problem. Trying to force MultiLineString geometry for file {}'.format(filepath))
-                self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiLineString'])
+                self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiLineString'], additional_env)
+            elif not additional_env and 'invalid byte sequence for encoding' in output:
+                logger.debug(
+                    'Character encoding problem. Trying with PGCLIENTENCODING=latin1 for file {}'.format(filepath))
+                self.push_file_to_postgis(filepath, resource_id, additional_params, {'PGCLIENTENCODING': 'latin1'})
             else:
                 raise exceptions.PushingToPostgisException('Problem while trying to push data to postgis')
 
