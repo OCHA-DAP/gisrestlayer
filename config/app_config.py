@@ -9,6 +9,7 @@ class Config(object):
     DB_NAME = 'gis'
     DB_USER = 'postgres'
     DB_HOST = 'db'
+    DB_PORT = 5432
 
     GIS_API_PATTERN = 'http://localhost/services/tables/{table_name}'
 
@@ -33,4 +34,8 @@ class Config(object):
     REDIS_DB = 1
 
     RQ_POLL_INTERVAL = 2500  #: Web interface poll period for updates in ms
+
+    # How long can a worker work on a task
+    RQ_WORKER_TIMEOUT = 300
+
     DEBUG = False

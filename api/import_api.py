@@ -44,6 +44,7 @@ def add_layer(dataset_id, resource_id):
             'download_url':  download_url,
             'max_file_size_mb': app.config.get('MAX_FILE_SIZE_MB',1) * 1024 * 1024,
             'timeout_sec': app.config.get('TIMEOUT_SEC', 1),
+            # 'worker_timeout_sec': app.config.get('RQ_WORKER_TIMEOUT', 180),
             'ckan_api_key': app.config.get('CKAN_API_KEY'),
             'resource_update_api': app.config.get('RESOURCE_UPDATE_API'),
             'gis_api_pattern': app.config.get('GIS_API_PATTERN'),
@@ -52,12 +53,14 @@ def add_layer(dataset_id, resource_id):
             'db_host': app.config.get('DB_HOST', 'db'),
             'db_name': app.config.get('DB_NAME', 'gis'),
             'db_user': app.config.get('DB_USER', 'ckan'),
+            'db_port': app.config.get('DB_PORT', 5432),
 
             'logging_config': app.config.get('LOGGING_CONF_FILE')
 
         }
 
-        q.enqueue(create_preview_task.create_preview_task, task_arguments)
+        q.enqueue_call(func=create_preview_task.create_preview_task, args=[task_arguments],
+                       timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
 
         logger.debug("Started create_preview_task for {}, {}, {}".format(dataset_id, resource_id, download_url))
 

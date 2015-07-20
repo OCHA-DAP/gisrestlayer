@@ -3,12 +3,14 @@ import logging
 import logging.config
 import shutil
 import subprocess
-import time
+# import time
 import urlparse
 import requests
 import json
 import api.exceptions.exceptions as exceptions
 import api.helpers.zip as zip_helper
+
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,7 @@ class CreatePreviewTask(object):
         self.download_url = args['download_url']
         self.max_file_size = args['max_file_size_mb']
         self.timeout = args['timeout_sec']
+        # self.worker_timeout = args['worker_timeout_sec']
         self.api_key = args['ckan_api_key']
         self.resource_update_api = args['resource_update_api']
         self.gis_api_pattern = args['gis_api_pattern']
@@ -35,6 +38,7 @@ class CreatePreviewTask(object):
         self.db_host = args['db_host']
         self.db_name = args['db_name']
         self.db_user = args['db_user']
+        self.db_port = args['db_port']
 
     def process(self):
         logger.info("In create_preview_task for {}, {}, {}".format(self.dataset_id, self.resource_id, self.download_url))
@@ -70,8 +74,8 @@ class CreatePreviewTask(object):
 
         chunk_size = 1024*1024  # 1 MB
 
-        # timeout is 1 sec
-        r = requests.get(self.download_url, stream=True, timeout=1, headers={"Authorization": self.api_key},)
+        # timeout for both setting up a connection and reading first byte is 12 sec
+        r = requests.get(self.download_url, stream=True, timeout=12, headers={"Authorization": self.api_key},)
         r.raise_for_status()
 
         content_length = r.headers.get('Content-Length')
@@ -147,7 +151,7 @@ class CreatePreviewTask(object):
             'ogr2ogr',
             '-f',
             '"PostgreSQL"',
-            'PG:host={} dbname={} user={}'.format(self.db_host, self.db_name, self.db_user),
+            'PG:host={} dbname={} port={} user={}'.format(self.db_host, self.db_name, self.db_port, self.db_user),
             '{}'.format(filepath),
             '-nln',
             resource_id,
@@ -166,7 +170,7 @@ class CreatePreviewTask(object):
                 my_env = os.environ.copy()
                 my_env.update(additional_env)
                 output = subprocess.check_output(execute, stderr=subprocess.STDOUT, env=my_env)
-            logger.info('Pushed {} successfully to table {}'.format(filepath, resource_id))
+            logger.info('Pushed to POSTGIS {} successfully to table {}'.format(filepath, resource_id))
         except subprocess.CalledProcessError, e:
             logger.warning(str(e))
             output = e.output
@@ -227,18 +231,18 @@ class CreatePreviewTask(object):
             try:
                 shape_info_json = json.dumps(shape_info_dict)
                 data_json = json.dumps({'id': self.resource_id, 'shape_info': shape_info_json})
-                logger.debug('Pushing following information for resource {}: {}'.format(self.resource_id, data_json))
+                logger.debug('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id, data_json))
                 r = requests.post(self.resource_update_api,
                                   data=data_json,
                                   headers={"Authorization": self.api_key, 'content-type': 'application/json'},
                                   verify=False)
-                logger.info('Pushed back shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
+                logger.info('Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
             except Exception, e:
                 logger.error(str(e))
         else:
             logger.error(
-                'Update url or api key missing when pushing back shape info for resource {}'.format(self.resource_id))
-            raise exceptions.WrongConfigurationException('Either resource update url or api key missing')
+                'Update url or api key missing when pushing to CKAN shape info for resource {}'.format(self.resource_id))
+            raise exceptions.WrongConfigurationException('Either CKAN resource update url or api key missing')
 
     def generate_layer_id(self):
         # dataset_prefix = ''.join(i if i.isalnum() else '_' for i in dataset_id[0:10])
