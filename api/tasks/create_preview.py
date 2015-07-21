@@ -14,6 +14,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
+accepted_extensions = ['json', 'geojson', 'zip', 'kml']
 
 def create_preview_task(task_arguments):
     task = CreatePreviewTask(task_arguments)
@@ -141,9 +142,9 @@ class CreatePreviewTask(object):
             split_url = urlparse.urlsplit(self.download_url)
             if split_url.path:
                 file_name = os.path.basename(split_url.path)
-                if file_name.split(".")[-1].lower() in ['json', 'geojson', 'zip']:
+                if file_name.split(".")[-1].lower() in accepted_extensions:
                     return file_name
-        raise ValueError('Filename could not be found')
+        raise ValueError('CKAN resource filename could not be deduced')
 
     def push_file_to_postgis(self, filepath, resource_id, additional_params=None, additional_env=None):
 
