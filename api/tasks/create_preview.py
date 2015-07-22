@@ -204,7 +204,7 @@ class CreatePreviewTask(object):
             '-h',
             self.db_host,
             '-p',
-            self.db_port,
+            str(self.db_port),
             '-c',
             sql_query,
             '-t', # turn off table header and row count
