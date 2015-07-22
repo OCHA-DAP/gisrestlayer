@@ -2,11 +2,9 @@ import logging
 import flask
 
 
-from redis import Redis
-from rq import Queue
-
 import api.exceptions.exceptions as exceptions
 import api.tasks.create_preview as create_preview_task
+
 
 g = flask.g
 request = flask.request
@@ -21,13 +19,15 @@ app = flask.current_app
 import_api = Blueprint('import_api', __name__)
 logger.info('import_api blueprint loaded')
 
-redis_connection = Redis(host='redis', db=1)
+# redis_connection = Redis(host='redis', db=1)
+# redis_connection = Redis(host=app.config.get('REDIS_HOST', 'redis'), db=app.config.get('REDIS_DB', 1),
+#                          port=app.config.get('REDIS_PORT', 6379))
 
-q = Queue("geo_q", connection=redis_connection)
+# q = Queue("geo_q", connection=redis_connection)
 
 @import_api.route('/api/add-layer/dataset/<string:dataset_id>/resource/<string:resource_id>', methods=['GET'])
 def add_layer(dataset_id, resource_id):
-
+    from gis_rest_layer import q
     data_dict = {
         'state': 'processing',
         'message': 'The processing of the geo-preview has started',
