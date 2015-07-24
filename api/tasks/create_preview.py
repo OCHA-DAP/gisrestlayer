@@ -115,7 +115,7 @@ class CreatePreviewTask(object):
             finally:
                 r.close()
 
-        if extension == '.zip':
+        if extension and extension.lower() == '.zip':
             unzipper = zip_helper.Unzipper(filepath)
             unzipper.unzip()
             file_to_be_pushed = unzipper.find_layer_file()
