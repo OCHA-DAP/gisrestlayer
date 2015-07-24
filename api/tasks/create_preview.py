@@ -160,7 +160,10 @@ class CreatePreviewTask(object):
             '-lco',
             'OVERWRITE=YES',
             '-fieldTypeToString',
-            'Real'
+            'Real',
+            '-t_srs',
+            'EPSG:4326'
+
         ]
         if additional_params:
             execute = execute + additional_params
