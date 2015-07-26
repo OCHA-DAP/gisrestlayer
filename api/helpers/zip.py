@@ -13,7 +13,12 @@ class Unzipper(object):
         self.zipdir = basedir + self.relative_zip_dir
         os.makedirs(self.zipdir)
         zip = zipfile.ZipFile(self.filepath)
-        zip.extractall(self.zipdir)
+        infolist = zip.infolist()
+        for info in infolist:
+            info.filename = ''.join(i if i.isalnum() or i == '.' else '_' for i in info.filename)
+            zip.extract(info, unicode(self.zipdir))
+        #zip.extractall(self.zipdir)
+        # zip.extractall(self.zipdir)
         zip.close()
 
     def find_layer_file(self):
