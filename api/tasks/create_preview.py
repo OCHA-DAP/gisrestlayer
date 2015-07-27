@@ -28,6 +28,7 @@ class CreatePreviewTask(object):
         self.dataset_id = args['dataset_id']
         self.resource_id = args['resource_id']
         self.download_url = args['download_url']
+        self.url_type = args['url_type']
         self.max_file_size = args['max_file_size_mb']
         self.timeout = args['timeout_sec']
         # self.worker_timeout = args['worker_timeout_sec']
@@ -76,7 +77,11 @@ class CreatePreviewTask(object):
         chunk_size = 1024*1024  # 1 MB
 
         # timeout for both setting up a connection and reading first byte is 12 sec
-        r = requests.get(self.download_url, stream=True, timeout=12, headers={"Authorization": self.api_key},)
+        r = None
+        if self.url_type == 'upload': # if URL is on the CKAN site
+            r = requests.get(self.download_url, stream=True, timeout=12, headers={"Authorization": self.api_key})
+        else:
+            r = requests.get(self.download_url, stream=True, timeout=12)
         r.raise_for_status()
 
         content_length = r.headers.get('Content-Length')

@@ -42,6 +42,7 @@ def add_layer(dataset_id, resource_id):
             'dataset_id': dataset_id,
             'resource_id': resource_id,
             'download_url':  download_url,
+            'url_type': _get_url_type(request),
             'max_file_size_mb': app.config.get('MAX_FILE_SIZE_MB',1) * 1024 * 1024,
             'timeout_sec': app.config.get('TIMEOUT_SEC', 1),
             # 'worker_timeout_sec': app.config.get('RQ_WORKER_TIMEOUT', 180),
@@ -61,6 +62,9 @@ def add_layer(dataset_id, resource_id):
 
         q.enqueue_call(func=create_preview_task.create_preview_task, args=[task_arguments],
                        timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
+        # For debugging purposes, comment line above and uncomment line below.
+        # That way no rq tasks will be created.
+        #  create_preview_task.create_preview_task(task_arguments)
 
         logger.debug("Started create_preview_task for {}, {}, {}".format(dataset_id, resource_id, download_url))
 
@@ -81,4 +85,7 @@ def _get_download_url(request):
         return request.args['resource_download_url']
     except Exception, e:
         raise exceptions.MissingUrlException("Url missing or has a problem", [e])
+
+def _get_url_type(request):
+    return request.args.get('url_type', 'api')
 
