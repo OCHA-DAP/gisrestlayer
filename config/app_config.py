@@ -39,3 +39,5 @@ class Config(object):
     RQ_WORKER_TIMEOUT = 300
 
     DEBUG = False
+
+    CKAN_SERVER_URL = 'data.hdx.rwlabs.org'
