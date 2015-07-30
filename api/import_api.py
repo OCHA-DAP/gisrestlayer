@@ -56,6 +56,8 @@ def add_layer(dataset_id, resource_id):
             'db_user': app.config.get('DB_USER', 'ckan'),
             'db_port': app.config.get('DB_PORT', 5432),
 
+            'ckan_server_url': app.config.get('CKAN_SERVER_URL', 'data.hdx.rwlabs.org'),
+
             'logging_config': app.config.get('LOGGING_CONF_FILE')
 
         }
