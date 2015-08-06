@@ -11,6 +11,8 @@ class Config(object):
     DB_HOST = 'db'
     DB_PORT = 5432
 
+    TMP_DOWNLOAD_DIRECTORY = '/tmp'
+
     GIS_API_PATTERN = 'http://localhost/services/tables/{table_name}'
 
     # Needed to push the results back to CKAN

@@ -44,6 +44,8 @@ class CreatePreviewTask(object):
         self.db_user = args['db_user']
         self.db_port = args['db_port']
 
+        self.tmp_download_directory = args['tmp_download_directory']
+
     def process(self):
         logger.info(
             "In create_preview_task for {}, {}, {}".format(self.dataset_id, self.resource_id, self.download_url))
@@ -96,7 +98,8 @@ class CreatePreviewTask(object):
 
         size = 0
         start = time.time()
-        directory = '/tmp/' + layer_id
+        directory = '{}/{}'.format(self.tmp_download_directory, layer_id)
+        # directory = '/tmp/' + layer_id
         filepath = directory + '/' + self._get_filename(r)
         extension = os.path.splitext(filepath)[1]
 
