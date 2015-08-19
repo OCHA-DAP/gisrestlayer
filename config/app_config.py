@@ -43,3 +43,4 @@ class Config(object):
     DEBUG = False
 
     CKAN_SERVER_URL = 'data.hdx.rwlabs.org'
+    VERIFIY_CKAN_SSL = True

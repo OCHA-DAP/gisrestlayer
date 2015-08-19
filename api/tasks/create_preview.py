@@ -29,6 +29,7 @@ class CreatePreviewTask(object):
         self.dataset_id = args['dataset_id']
         self.resource_id = args['resource_id']
         self.download_url = args['download_url']
+        self.verify_ckan_ssl = args['verify_ckan_ssl']
         self.ckan_server_url = args['ckan_server_url']
         self.url_type = args['url_type']
         self.max_file_size = args['max_file_size_mb']
@@ -85,7 +86,8 @@ class CreatePreviewTask(object):
         # timeout for both setting up a connection and reading first byte is 12 sec
         r = None
         if self.ckan_server_url in self.download_url:  # if URL is on the CKAN site
-            r = requests.get(self.download_url, stream=True, timeout=12, headers={"Authorization": self.api_key})
+            r = requests.get(self.download_url, stream=True, timeout=12, verify=self.verify_ckan_ssl,
+                             headers={"Authorization": self.api_key})
         else:
             r = requests.get(self.download_url, stream=True, timeout=12)
         r.raise_for_status()
@@ -275,7 +277,7 @@ class CreatePreviewTask(object):
                 r = requests.post(self.resource_update_api,
                                   data=data_json,
                                   headers={"Authorization": self.api_key, 'content-type': 'application/json'},
-                                  verify=False)
+                                  verify=self.verify_ckan_ssl)
                 logger.info(
                     'Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
             except Exception, e:
