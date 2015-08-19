@@ -262,7 +262,7 @@ class CreatePreviewTask(object):
 
     def notify_gis_server(self, resource_id):
         gis_api_url = self.gis_api_pattern.format(table_name=resource_id)
-        r = requests.get(gis_api_url)
+        r = requests.get(gis_api_url, verify=self.verify_ckan_ssl)
         r.raise_for_status()
         r.close()
 
