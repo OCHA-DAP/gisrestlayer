@@ -11,6 +11,8 @@ class Config(object):
     DB_HOST = 'db'
     DB_PORT = 5432
 
+    TMP_DOWNLOAD_DIRECTORY = '/tmp'
+
     GIS_API_PATTERN = 'http://localhost/services/tables/{table_name}'
 
     # Needed to push the results back to CKAN
@@ -41,3 +43,4 @@ class Config(object):
     DEBUG = False
 
     CKAN_SERVER_URL = 'data.hdx.rwlabs.org'
+    VERIFIY_CKAN_SSL = True

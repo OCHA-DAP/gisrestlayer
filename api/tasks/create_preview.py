@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 accepted_extensions = ['json', 'geojson', 'zip', 'kml']
 
+
 def create_preview_task(task_arguments):
     task = CreatePreviewTask(task_arguments)
     return task.process()
@@ -28,6 +29,7 @@ class CreatePreviewTask(object):
         self.dataset_id = args['dataset_id']
         self.resource_id = args['resource_id']
         self.download_url = args['download_url']
+        self.verify_ckan_ssl = args['verify_ckan_ssl']
         self.ckan_server_url = args['ckan_server_url']
         self.url_type = args['url_type']
         self.max_file_size = args['max_file_size_mb']
@@ -43,8 +45,11 @@ class CreatePreviewTask(object):
         self.db_user = args['db_user']
         self.db_port = args['db_port']
 
+        self.tmp_download_directory = args['tmp_download_directory']
+
     def process(self):
-        logger.info("In create_preview_task for {}, {}, {}".format(self.dataset_id, self.resource_id, self.download_url))
+        logger.info(
+            "In create_preview_task for {}, {}, {}".format(self.dataset_id, self.resource_id, self.download_url))
         data_dict = {
             'state': 'success',
             'message': 'Import successful',
@@ -72,15 +77,17 @@ class CreatePreviewTask(object):
                 data_dict['type'] = 'unknown'
 
         self.push_information_back_to_ckan(data_dict)
+        self.delete_download_directory()
 
     def download_file(self, layer_id):
 
-        chunk_size = 1024*1024  # 1 MB
+        chunk_size = 1024 * 1024  # 1 MB
 
         # timeout for both setting up a connection and reading first byte is 12 sec
         r = None
-        if self.ckan_server_url in self.download_url: # if URL is on the CKAN site
-            r = requests.get(self.download_url, stream=True, timeout=12, headers={"Authorization": self.api_key})
+        if self.ckan_server_url in self.download_url:  # if URL is on the CKAN site
+            r = requests.get(self.download_url, stream=True, timeout=12, verify=self.verify_ckan_ssl,
+                             headers={"Authorization": self.api_key})
         else:
             r = requests.get(self.download_url, stream=True, timeout=12)
         r.raise_for_status()
@@ -93,13 +100,15 @@ class CreatePreviewTask(object):
 
         size = 0
         start = time.time()
-        directory = '/tmp/' + layer_id
+        directory = '{}/{}'.format(self.tmp_download_directory, layer_id)
+        # directory = '/tmp/' + layer_id
         filepath = directory + '/' + self._get_filename(r)
         extension = os.path.splitext(filepath)[1]
 
         file_to_be_pushed = None
 
         self._create_download_dir(directory)
+        self.download_directory = directory
 
         with open(filepath, "wb") as fh:
             try:
@@ -116,8 +125,8 @@ class CreatePreviewTask(object):
                     fh.write(chunk)
                 file_to_be_pushed = filepath
             except Exception as e:
-                    logger.error('Exception occured while downloading file {}: {}'.format(filepath, str(e)))
-                    raise e
+                logger.error('Exception occured while downloading file {}: {}'.format(filepath, str(e)))
+                raise e
             finally:
                 r.close()
 
@@ -180,7 +189,7 @@ class CreatePreviewTask(object):
         try:
             if solution and solution.has_env_keys():
                 my_env = os.environ.copy()
-                my_env.update({key:value for key,value in solution.get_env_items()})
+                my_env.update({key: value for key, value in solution.get_env_items()})
                 output = subprocess.check_output(execute, stderr=subprocess.STDOUT, env=my_env)
             else:
                 # first time tryin to improt this file
@@ -202,25 +211,25 @@ class CreatePreviewTask(object):
                 raise exceptions.PushingToPostgisException('Problem during ogr2ogr import to postgis')
 
 
-            # avoid infinte cycles
-            # if not additional_params and 'does not match column type (Polygon)' in output:
-            #     logger.debug(
-            #         'Geometry type problem. Trying to force MultiPolygon geometry for file {}'.format(filepath))
-            #     self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiPolygon'], additional_env)
-            # elif not additional_params and 'does not match column type (LineString)' in output:
-            #     logger.debug(
-            #         'Geometry type problem. Trying to force MultiLineString geometry for file {}'.format(filepath))
-            #     self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiLineString'], additional_env)
-            # elif not additional_params and 'Can\'t transform coordinates, source layer has no' in output:
-            #     logger.debug(
-            #         'Source SRS missing. Trying again with EPSG:4326 for file {}'.format(filepath))
-            #     self.push_file_to_postgis(filepath, resource_id, ['-s_srs', 'EPSG:4326'], additional_env)
-            # elif not additional_env and 'invalid byte sequence for encoding' in output:
-            #     logger.debug(
-            #         'Character encoding problem. Trying with PGCLIENTENCODING=latin1 for file {}'.format(filepath))
-            #     self.push_file_to_postgis(filepath, resource_id, additional_params, {'PGCLIENTENCODING': 'latin1'})
-            # else:
-            #     raise exceptions.PushingToPostgisException('Problem during ogr2ogr import to postgis')
+                # avoid infinte cycles
+                # if not additional_params and 'does not match column type (Polygon)' in output:
+                #     logger.debug(
+                #         'Geometry type problem. Trying to force MultiPolygon geometry for file {}'.format(filepath))
+                #     self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiPolygon'], additional_env)
+                # elif not additional_params and 'does not match column type (LineString)' in output:
+                #     logger.debug(
+                #         'Geometry type problem. Trying to force MultiLineString geometry for file {}'.format(filepath))
+                #     self.push_file_to_postgis(filepath, resource_id, ['-nlt', 'MultiLineString'], additional_env)
+                # elif not additional_params and 'Can\'t transform coordinates, source layer has no' in output:
+                #     logger.debug(
+                #         'Source SRS missing. Trying again with EPSG:4326 for file {}'.format(filepath))
+                #     self.push_file_to_postgis(filepath, resource_id, ['-s_srs', 'EPSG:4326'], additional_env)
+                # elif not additional_env and 'invalid byte sequence for encoding' in output:
+                #     logger.debug(
+                #         'Character encoding problem. Trying with PGCLIENTENCODING=latin1 for file {}'.format(filepath))
+                #     self.push_file_to_postgis(filepath, resource_id, additional_params, {'PGCLIENTENCODING': 'latin1'})
+                # else:
+                #     raise exceptions.PushingToPostgisException('Problem during ogr2ogr import to postgis')
 
     def fetch_bounding_box(self, resource_id):
 
@@ -236,7 +245,7 @@ class CreatePreviewTask(object):
             str(self.db_port),
             '-c',
             sql_query,
-            '-t', # turn off table header and row count
+            '-t',  # turn off table header and row count
             self.db_name
         ]
 
@@ -263,17 +272,20 @@ class CreatePreviewTask(object):
             try:
                 shape_info_json = json.dumps(shape_info_dict)
                 data_json = json.dumps({'id': self.resource_id, 'shape_info': shape_info_json})
-                logger.debug('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id, data_json))
+                logger.debug('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id,
+                                                                                                       data_json))
                 r = requests.post(self.resource_update_api,
                                   data=data_json,
                                   headers={"Authorization": self.api_key, 'content-type': 'application/json'},
-                                  verify=False)
-                logger.info('Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
+                                  verify=self.verify_ckan_ssl)
+                logger.info(
+                    'Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
             except Exception, e:
                 logger.error(str(e))
         else:
             logger.error(
-                'Update url or api key missing when pushing to CKAN shape info for resource {}'.format(self.resource_id))
+                'Update url or api key missing when pushing to CKAN shape info for resource {}'.format(
+                    self.resource_id))
             raise exceptions.WrongConfigurationException('Either CKAN resource update url or api key missing')
 
     def generate_layer_id(self):
@@ -282,3 +294,14 @@ class CreatePreviewTask(object):
         main_part = ''.join(i if i.isalnum() else '_' for i in self.resource_id)
         layer_id = "{}_{}".format(self.table_prefix, main_part)
         return layer_id
+
+    def delete_download_directory(self):
+        if self.download_directory and os.path.exists(self.download_directory):
+            try:
+                logger.info('Deleting folder {}'.format(self.download_directory))
+                shutil.rmtree(self.download_directory)
+            except Exception, e:
+                logger.error(str(e))
+        else:
+            logger.warning('Not deleting directory for resource id {} because download dir does not exist'.format(
+                self.resource_id))

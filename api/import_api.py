@@ -55,8 +55,10 @@ def add_layer(dataset_id, resource_id):
             'db_name': app.config.get('DB_NAME', 'gis'),
             'db_user': app.config.get('DB_USER', 'ckan'),
             'db_port': app.config.get('DB_PORT', 5432),
+            'tmp_download_directory': app.config.get('TMP_DOWNLOAD_DIRECTORY', '/tmp'),
 
             'ckan_server_url': app.config.get('CKAN_SERVER_URL', 'data.hdx.rwlabs.org'),
+            'verify_ckan_ssl': app.config.get('VERIFIY_CKAN_SSL', True),
 
             'logging_config': app.config.get('LOGGING_CONF_FILE')
 
