@@ -1,3 +1,4 @@
 flask
 rq
 rq-dashboard
+psycopg2>=2.6.1

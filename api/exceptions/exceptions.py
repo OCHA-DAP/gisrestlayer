@@ -21,7 +21,7 @@ class PushingToPostgisException(GisRestLayerException):
 class MissingUrlException(GisRestLayerException):
     type = 'missing-url'
 
-class FetchBoundingBoxException(GisRestLayerException):
+class FetchLayerMetadataException(GisRestLayerException):
     type = 'fetch-bounding-box-problem'
 
 class WrongConfigurationException(GisRestLayerException):

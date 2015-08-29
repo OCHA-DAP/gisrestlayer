@@ -9,6 +9,7 @@ import json
 import api.exceptions.exceptions as exceptions
 import api.helpers.zip as zip_helper
 import api.helpers.problem_solver as problem_solver
+import api.helpers.db_helper as db_helper
 
 import time
 
@@ -44,6 +45,7 @@ class CreatePreviewTask(object):
         self.db_name = args['db_name']
         self.db_user = args['db_user']
         self.db_port = args['db_port']
+        self.db_pass = args['db_pass']
 
         self.tmp_download_directory = args['tmp_download_directory']
 
@@ -64,8 +66,8 @@ class CreatePreviewTask(object):
             data_dict['layer_id'] = layer_id
             file_to_be_pushed = self.download_file(layer_id)
             self.push_file_to_postgis(file_to_be_pushed, layer_id)
-            bounding_box = self.fetch_bounding_box(layer_id)
-            data_dict['bounding_box'] = bounding_box
+            layer_metadata = self.fetch_layer_metadata_from_db(layer_id)
+            data_dict.update(layer_metadata)
             self.notify_gis_server(layer_id)
         except Exception, e:
             data_dict['state'] = 'failure'
@@ -231,34 +233,28 @@ class CreatePreviewTask(object):
                 # else:
                 #     raise exceptions.PushingToPostgisException('Problem during ogr2ogr import to postgis')
 
-    def fetch_bounding_box(self, resource_id):
+    def fetch_layer_metadata_from_db(self, resource_id):
+        logger.debug('Starting to fetch bounding box and fields for resource {}'.format(resource_id))
 
-        sql_query = 'select ST_Extent(wkb_geometry) as table_extent from {}'.format(resource_id)
+        with db_helper.DbHelper(self.db_host, self.db_port, self.db_name, self.db_user, self.db_pass) as dbh:
+            bounding_box = dbh.fetch_one_item(
+                'select ST_Extent(wkb_geometry)::text as table_extent from {}'.format(resource_id), None)
+            logger.info('Fetched bounding box: "{}" for resource {}'.format(bounding_box, resource_id))
 
-        execute = [
-            'psql',
-            '-U',
-            self.db_user,
-            '-h',
-            self.db_host,
-            '-p',
-            str(self.db_port),
-            '-c',
-            sql_query,
-            '-t',  # turn off table header and row count
-            self.db_name
-        ]
+            f_sql = "select column_name as field_name, data_type from information_schema.columns where table_name=%s"
+            layer_fields = dbh.fetch_dictionary(f_sql, (resource_id,))
 
-        try:
-            logger.debug('Starting to fetch bounding box for resource {}'.format(resource_id))
-            output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
-            output = output.strip()
-            logger.info('Fetched bounding box. "{}" for resource {}'.format(output, resource_id))
-            return output
-        except subprocess.CalledProcessError, e:
-            logger.warning(str(e))
-            output = e.output
-            raise exceptions.FetchBoundingBoxException(output)
+            logger.info('Fetched layer fields: "{}" for resource {}'.format(str(layer_fields), resource_id))
+
+        if not bounding_box:
+            raise exceptions.FetchLayerMetadataException('Bounding box was not retrieved ')
+        if not layer_fields:
+            raise exceptions.FetchLayerMetadataException('Layer fields were not retrieved ')
+
+        return {
+            'bounding_box': bounding_box,
+            'layer_fields': layer_fields
+        }
 
     def notify_gis_server(self, resource_id):
         gis_api_url = self.gis_api_pattern.format(table_name=resource_id)
