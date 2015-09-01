@@ -8,6 +8,7 @@ class Config(object):
 
     DB_NAME = 'gis'
     DB_USER = 'postgres'
+    DB_PASS = 'abc'
     DB_HOST = 'db'
     DB_PORT = 5432
 
