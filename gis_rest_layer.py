@@ -38,7 +38,7 @@ def page_not_found(error):
     }
 
 
-import api.import_api as import_api
+import importapi.import_api as import_api
 app.register_blueprint(import_api.import_api)
 
 rq_dashboard.RQDashboard(app, url_prefix='/monitor')

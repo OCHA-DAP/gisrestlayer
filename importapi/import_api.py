@@ -2,8 +2,8 @@ import logging
 import flask
 
 
-import api.exceptions.exceptions as exceptions
-import api.tasks.create_preview as create_preview_task
+import importapi.exceptions.exceptions as exceptions
+import importapi.tasks.create_preview as create_preview_task
 
 
 g = flask.g
@@ -25,7 +25,7 @@ logger.info('import_api blueprint loaded')
 
 # q = Queue("geo_q", connection=redis_connection)
 
-@import_api.route('/api/add-layer/dataset/<string:dataset_id>/resource/<string:resource_id>', methods=['GET'])
+@import_api.route('/importapi/add-layer/dataset/<string:dataset_id>/resource/<string:resource_id>', methods=['GET'])
 def add_layer(dataset_id, resource_id):
     from gis_rest_layer import q
     data_dict = {
@@ -92,5 +92,5 @@ def _get_download_url(request):
         raise exceptions.MissingUrlException("Url missing or has a problem", [e])
 
 def _get_url_type(request):
-    return request.args.get('url_type', 'api')
+    return request.args.get('url_type', 'importapi')
 
