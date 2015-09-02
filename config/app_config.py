@@ -17,9 +17,12 @@ class Config(object):
     GIS_API_PATTERN = 'http://localhost/services/tables/{table_name}'
 
     # Needed to push the results back to CKAN
-    RESOURCE_UPDATE_API = 'http://172.17.42.1:5000/importapi/action/hdx_resource_update_metadata'
+    RESOURCE_UPDATE_API = 'http://172.17.42.1:5000/api/action/hdx_resource_update_metadata'
 
-    # No worries, this is a dummy importapi key
+    # Needed for finding all existing resources
+    PACKAGE_SEARCH_API = 'http://172.17.42.1:5000/api/action/package_search'
+
+    # No worries, this is a dummy api key
     CKAN_API_KEY = 'e2a174b1-4d1c-42ac-afb3-28926b61a663'
 
     # URL or hostname of the redis server
@@ -43,5 +46,5 @@ class Config(object):
 
     DEBUG = False
 
-    CKAN_SERVER_URL = 'data.hdx.rwlabs.org'
+    CKAN_SERVER_URL = 'replace.with.url.of.ckan.server'
     VERIFIY_CKAN_SSL = True
