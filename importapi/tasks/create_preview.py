@@ -4,14 +4,13 @@ import logging.config
 import shutil
 import subprocess
 import urlparse
-import requests
 import json
+import time
+import requests
 import importapi.exceptions.exceptions as exceptions
 import importapi.helpers.zip as zip_helper
 import importapi.helpers.problem_solver as problem_solver
-import importapi.helpers.db_helper as db_helper
-
-import time
+import helpers.db_helper as db_helper
 
 logger = logging.getLogger(__name__)
 
