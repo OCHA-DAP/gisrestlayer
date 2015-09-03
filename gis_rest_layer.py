@@ -8,6 +8,8 @@ import rq_dashboard
 from redis import Redis
 from rq import Queue
 
+import werkzeug.exceptions as wexceptions
+
 g = flask.g
 Flask = flask.Flask
 make_response = flask.make_response
@@ -28,15 +30,22 @@ redis_connection = Redis(host=app.config.get('REDIS_HOST', 'redis'), db=app.conf
                          port=app.config.get('REDIS_PORT', 6379))
 q = Queue("geo_q", connection=redis_connection)
 
-@app.errorhandler(404)
-def page_not_found(error):
-    data_dict = {
-        'success': 'false',
-        'message': 'Page Not Found',
-        'error_type': 'page-not-found',
-        'error_class': 'none'
-    }
 
+def make_json_error(ex):
+    resp = {
+        'message': str(ex),
+        'state': 'failure',
+        'error_class': type(ex).__name__,
+        'error_type': 'transformation-init-problem'
+    }
+    response = jsonify(resp)
+    response.status_code = (ex.code
+                            if isinstance(ex, wexceptions.HTTPException)
+                            else 500)
+    return response
+
+for code in wexceptions.default_exceptions.iterkeys():
+    app.error_handler_spec[None][code] = make_json_error
 
 import deleteapi.delete_api as delete_api
 import importapi.import_api as import_api
