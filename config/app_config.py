@@ -20,7 +20,7 @@ class Config(object):
     RESOURCE_UPDATE_API = 'http://172.17.42.1:5000/api/action/hdx_resource_update_metadata'
 
     # Needed for finding all existing resources
-    PACKAGE_SEARCH_API = 'http://172.17.42.1:5000/api/action/package_search'
+    RESOURCE_ID_LIST_API = 'http://172.17.42.1:5000/api/action/hdx_resource_id_list'
 
     # No worries, this is a dummy api key
     CKAN_API_KEY = 'e2a174b1-4d1c-42ac-afb3-28926b61a663'

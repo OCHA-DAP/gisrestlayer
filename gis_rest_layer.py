@@ -38,8 +38,10 @@ def page_not_found(error):
     }
 
 
+import deleteapi.delete_api as delete_api
 import importapi.import_api as import_api
 app.register_blueprint(import_api.import_api)
+app.register_blueprint(delete_api.delete_api)
 
 rq_dashboard.RQDashboard(app, url_prefix='/monitor')
 
