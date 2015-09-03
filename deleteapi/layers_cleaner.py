@@ -23,8 +23,8 @@ class LayersCleaner(object):
         self.dry_run = dry_run
 
     def process(self):
-        data_dict = {
-            'state': 'None',
+        result = {
+            'state': 'started',
             'message': 'None',
             'count':'None',
             'items': [],
@@ -33,42 +33,64 @@ class LayersCleaner(object):
             'error_class': 'None'
         }
         try:
-            self._fetch_list_of_layers()
-            self._find_deleted_layers()
+            self._fetch_resource_id_list()
+            with db_helper.DbHelper(self.db_host, self.db_port, self.db_name, self.db_user, self.db_pass) as dbh:
+                self._fetch_list_of_layers(dbh)
+                self._find_deleted_layers()
 
-            m = 'Deleting {} layers from postgis out of {}. A total of {} resources was found on CKAN'.format(
-                len(self.deletable_layer_ids), len(self.layer_ids), len(self.resource_list))
-            data_dict['message'] = m
-            data_dict['count'] = len(self.deletable_layer_ids)
-            data_dict['items'] = list(self.deletable_layer_ids)
+                m = 'Deleting {} layers from postgis out of {}. A total of {} resources was found on CKAN'.format(
+                    len(self.deletable_layer_ids), len(self.layer_ids), len(self.resource_list))
+                result['message'] = m
+                result['count'] = len(self.deletable_layer_ids)
+                result['items'] = list(self.deletable_layer_ids)
+                result['state'] = 'analysis-finished'
+                if not self.dry_run:
+                    self._delete_layers(dbh)
+                    result['state'] = 'successful'
+
+                else:
+                    logger.info('Skipping the actual deletion of layers !')
+
         except Exception as e:
-            data_dict['state'] = 'failure'
-            data_dict['message'] = str(e)
-            data_dict['error_class'] = type(e).__name__
+            result['state'] = 'failure'
+            result['message'] = str(e)
+            result['error_class'] = type(e).__name__
             try:
-                data_dict['type'] = e.type
+                result['type'] = e.type
             except AttributeError:
-                data_dict['type'] = 'unknown'
+                result['type'] = 'unknown'
 
-        return data_dict
+        return result
 
-    def _fetch_list_of_layers(self):
+    def _fetch_list_of_layers(self, db_helper):
+        '''
+        :param db_helper: a DbHelper object
+        :type db_helper: db_helper.DbHelper
+        '''
         logger.debug('Before fetching layer ids from postgis')
         try:
-            with db_helper.DbHelper(self.db_host, self.db_port, self.db_name, self.db_user, self.db_pass) as dbh:
-                table_starts_with = '{}_%'.format(self.table_name_prefix)
-                query = '''SELECT table_name FROM information_schema.tables
-                            WHERE table_schema='public' AND table_name LIKE %s ORDER BY table_name;'''
-                tables = dbh.fetch_list(query, (table_starts_with,))
-                self.layer_ids = [table[len(self.table_name_prefix)+1:].replace('_', '-') for table in tables]
-                logger.info('Fetched {} layer ids'.format(len(self.layer_ids)))
+            table_starts_with = '{}_%'.format(self.table_name_prefix)
+            query = '''SELECT table_name FROM information_schema.tables
+                        WHERE table_schema='public' AND table_name LIKE %s ORDER BY table_name;'''
+            tables = db_helper.fetch_list(query, (table_starts_with,))
+            self.layer_ids = [table[len(self.table_name_prefix)+1:].replace('_', '-') for table in tables]
+            logger.info('Fetched {} layer ids'.format(len(self.layer_ids)))
         except Exception as e:
             msg = 'Problem while fetching layer list'
             logger.error(msg)
             raise exceptions.FetchLayerIdsException(msg, [e])
 
-
     def _find_deleted_layers(self):
+        self.deletable_layer_ids = set(self.layer_ids)
+        length = len(self.resource_list)
+        logger.info("Starting analysis...")
+
+        for idx, resource in enumerate(self.resource_list):
+            if (idx + 1) % 1000 == 0:
+                logger.debug('Progress: {}/{}'.format(idx + 1, length))
+            self.deletable_layer_ids.discard(resource)
+
+    def _fetch_resource_id_list(self):
         logger.debug('Before fetching resource ids from CKAN')
         r = requests.get(self.resource_id_list_api,
                           headers={"Authorization": self.api_key},
@@ -79,15 +101,24 @@ class LayersCleaner(object):
 
         if 'result' in response and len(response['result']) > 1:
             self.resource_list = response['result']
-            length = len(self.resource_list)
-            logger.debug('Found {} resource. Starting search...'.format(length) )
-            self.deletable_layer_ids = set(self.layer_ids)
-            for idx,resource in enumerate(self.resource_list):
-                if (idx+1)%1000 == 0:
-                    logger.debug('Progress: {}/{}'.format(idx+1, length))
-                self.deletable_layer_ids.discard(resource)
+
+            logger.debug('Found {} resources.'.format(len(self.resource_list)))
+
         else:
             msg = 'Seems like the ckan list of resources is not correct'
             logger.error(msg)
             raise exceptions.CkanInfoException(msg)
 
+
+    def _delete_layers(self, db_helper):
+        '''
+        :param db_helper: a DbHelper object
+        :type db_helper: db_helper.DbHelper
+        '''
+        logger.debug('Starting to delete layers...')
+
+        for id in self.deletable_layer_ids:
+            table_name = '{}_{}'.format(self.table_name_prefix, id.replace('-', '_'))
+            sql = 'DROP TABLE "{}";'.format(table_name)
+            db_helper.exec_with_no_return(sql, None)
+        logger.info('Layer deletion successful !')
