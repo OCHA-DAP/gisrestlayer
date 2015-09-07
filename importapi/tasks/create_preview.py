@@ -4,14 +4,13 @@ import logging.config
 import shutil
 import subprocess
 import urlparse
-import requests
 import json
-import api.exceptions.exceptions as exceptions
-import api.helpers.zip as zip_helper
-import api.helpers.problem_solver as problem_solver
-import api.helpers.db_helper as db_helper
-
 import time
+import requests
+import importapi.exceptions.exceptions as exceptions
+import importapi.helpers.zip as zip_helper
+import importapi.helpers.problem_solver as problem_solver
+import helpers.db_helper as db_helper
 
 logger = logging.getLogger(__name__)
 
@@ -280,9 +279,9 @@ class CreatePreviewTask(object):
                 logger.error(str(e))
         else:
             logger.error(
-                'Update url or api key missing when pushing to CKAN shape info for resource {}'.format(
+                'Update url or importapi key missing when pushing to CKAN shape info for resource {}'.format(
                     self.resource_id))
-            raise exceptions.WrongConfigurationException('Either CKAN resource update url or api key missing')
+            raise exceptions.WrongConfigurationException('Either CKAN resource update url or importapi key missing')
 
     def generate_layer_id(self):
         # dataset_prefix = ''.join(i if i.isalnum() else '_' for i in dataset_id[0:10])

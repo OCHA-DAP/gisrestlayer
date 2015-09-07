@@ -1,4 +1,4 @@
-from api.helpers.problem import MultiLineProblem, MultiPolygonProblem, NoSRSProblem, Latin1EncodingProblem
+from importapi.helpers.problem import MultiLineProblem, MultiPolygonProblem, NoSRSProblem, Latin1EncodingProblem
 class ProblemSolver(object):
 
     problems = [

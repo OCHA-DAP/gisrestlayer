@@ -19,6 +19,9 @@ class Config(object):
     # Needed to push the results back to CKAN
     RESOURCE_UPDATE_API = 'http://172.17.42.1:5000/api/action/hdx_resource_update_metadata'
 
+    # Needed for finding all existing resources
+    RESOURCE_ID_LIST_API = 'http://172.17.42.1:5000/api/action/hdx_resource_id_list'
+
     # No worries, this is a dummy api key
     CKAN_API_KEY = 'e2a174b1-4d1c-42ac-afb3-28926b61a663'
 
@@ -43,5 +46,5 @@ class Config(object):
 
     DEBUG = False
 
-    CKAN_SERVER_URL = 'data.hdx.rwlabs.org'
+    CKAN_SERVER_URL = 'replace.with.url.of.ckan.server'
     VERIFIY_CKAN_SSL = True

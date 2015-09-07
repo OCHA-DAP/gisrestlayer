@@ -14,7 +14,10 @@ class DbHelper(object):
         return  self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        if exc_type:
+            self.close()
+        else:
+            self.close(commit=True)
 
     def fetch_one_item(self, query, params):
         result = None
@@ -39,6 +42,12 @@ class DbHelper(object):
             result = [{key: value for key, value in row.iteritems()} for row in rows ]
         return result
 
-    def close(self):
+    def exec_with_no_return(self, query, params):
+        with self.con.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute(query, params)
+
+    def close(self, commit=False):
+        if commit:
+            self.con.commit()
         self.con.close()
         logger.debug('Pg connection closed')

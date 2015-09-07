@@ -2,8 +2,8 @@ import logging
 import flask
 
 
-import api.exceptions.exceptions as exceptions
-import api.tasks.create_preview as create_preview_task
+import importapi.exceptions.exceptions as exceptions
+import importapi.tasks.create_preview as create_preview_task
 
 
 g = flask.g
@@ -77,7 +77,7 @@ def add_layer(dataset_id, resource_id):
         data_dict['state'] = 'failure'
         data_dict['message'] = str(e)
         data_dict['error_class'] = type(e).__name__
-        data_dict['type'] = 'transformation-init-problem'
+        data_dict['error_type'] = 'transformation-init-problem'
 
     logger.debug('Returning immediately: {}'.format(str(data_dict)))
     result = jsonify(data_dict)
