@@ -31,7 +31,7 @@ def delete_layers(dry_run):
         ckan_params = {
             'resource_id_list_api': app.config.get('RESOURCE_ID_LIST_API'),
             'ckan_api_key': app.config.get('CKAN_API_KEY'),
-            'verify_ckan_ssl': app.config.get('VERIFIY_CKAN_SSL', True)
+            'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True)
         }
 
         dry_run_bool = False if dry_run == 'false' else True
