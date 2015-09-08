@@ -47,4 +47,4 @@ class Config(object):
     DEBUG = False
 
     CKAN_SERVER_URL = 'replace.with.url.of.ckan.server'
-    VERIFIY_CKAN_SSL = True
+    VERIFY_CKAN_SSL = True
