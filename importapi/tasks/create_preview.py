@@ -14,7 +14,7 @@ import helpers.db_helper as db_helper
 
 logger = logging.getLogger(__name__)
 
-accepted_extensions = ['json', 'geojson', 'zip', 'kml']
+accepted_extensions = ['json', 'geojson', 'zip', 'kml', 'kmz']
 
 
 def create_preview_task(task_arguments):
@@ -168,7 +168,7 @@ class CreatePreviewTask(object):
             'ogr2ogr',
             '-f',
             '"PostgreSQL"',
-            'PG:host={} dbname={} port={} user={}'.format(self.db_host, self.db_name, self.db_port, self.db_user),
+            'PG:host={} dbname={} port={} user={} password={}'.format(self.db_host, self.db_name, self.db_port, self.db_user, self.db_pass),
             '{}'.format(filepath),
             '-nln',
             resource_id,
