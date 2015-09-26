@@ -1,10 +1,5 @@
 [
   {
-    "name": "No Check",
-    "module_name": "ckanext.hdx_service_checker.checks.checks",
-    "class_name": "DummyCheck"
-  },
-  {
     "name": "Yahoo",
     "module_name": "ckanext.hdx_service_checker.checks.checks",
     "class_name": "HttpStatusCodeCheck",
@@ -24,5 +19,18 @@
     "class_name": "HttpResponseTextCheck",
     "url": "#{hdx.datapreview.url}",
     "included_text": "read the dataproxy API"
+  },
+  {
+    "name": "Spatial server check",
+    "module_name": "ckanext.hdx_service_checker.checks.checks",
+    "class_name": "HttpResponseTextCheck",
+    "url": "#{hdx_checks.spatial_checks_url}",
+    "included_text": "pre_"
+  },
+  {
+    "name": "GIS Layer remote check",
+    "module_name": "ckanext.hdx_service_checker.checks.checks",
+    "class_name": "ProxyForRemoteCheck",
+    "url": "#{hdx_checks.gis_layer_checks_api}"
   }
 ]

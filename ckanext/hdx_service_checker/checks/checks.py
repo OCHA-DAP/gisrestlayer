@@ -36,14 +36,18 @@ class HttpStatusCodeCheck(checks.Check):
         if not url or not accepted_codes:
             raise exceptions.ParamMissingException('Param missing for HttpStatusCodeCheck')
 
-        r = requests.get(url)
-        status = str(r.status_code)
-        if status in accepted_codes:
-            self.result = 'Passed'
-            self.error_message = ''
-        else:
+        try:
+            r = requests.get(url)
+            status = str(r.status_code)
+            if status in accepted_codes:
+                self.result = 'Passed'
+                self.error_message = ''
+            else:
+                self.result = 'Failed'
+                self.error_message = 'Status code is {} instead of: {}'.format(status, ' or '.join(accepted_codes))
+        except Exception as e:
             self.result = 'Failed'
-            self.error_message = 'Status code is {} instead of: {}'.format(status, ' or '.join(accepted_codes))
+            self.error_message = str(e)
 
         result = super(HttpStatusCodeCheck, self)._create_result()
         return result
@@ -70,14 +74,18 @@ class HttpResponseTextCheck(checks.Check):
         if not url or not included_text:
             raise exceptions.ParamMissingException('Param missing for HttpStatusCodeCheck')
 
-        r = requests.get(url)
+        try:
+            r = requests.get(url)
 
-        if included_text in r.text:
-            self.result = 'Passed'
-            self.error_message = ''
-        else:
+            if included_text in r.text:
+                self.result = 'Passed'
+                self.error_message = ''
+            else:
+                self.result = 'Failed'
+                self.error_message = '"{}" was not found in HTTP response'.format(included_text)
+        except Exception as e:
             self.result = 'Failed'
-            self.error_message = '"{}" was not found in HTTP response'.format(included_text)
+            self.error_message = str(e)
 
         result = super(HttpResponseTextCheck, self)._create_result()
         return result
@@ -102,11 +110,21 @@ class ProxyForRemoteCheck(checks.Check):
         if not url:
             raise exceptions.ParamMissingException('Param missing for HttpStatusCodeCheck')
 
-        r = requests.get(url)
-        self.subchecks = r.json()
+        try:
+            r = requests.get(url)
+            response = r.json()
+            if 'result' in response:
+                self.subchecks = response['result']
+                self.result = 'subchecks'
+                self.error_message = ''
+            else:
+                self.result = 'Failed'
+                self.error_message = '"result" field missing from json response'
+                self.subchecks = response
 
-        self.result = 'Passed'
-        self.error_message = ''
+        except Exception as e:
+            self.result = 'Failed'
+            self.error_message = str(e)
 
         result = super(ProxyForRemoteCheck, self)._create_result()
         return result
