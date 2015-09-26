@@ -1,0 +1,23 @@
+  [
+    {
+      "name": "Ckan update resource check",
+      "module_name": "ckanext.hdx_service_checker.checks.checks",
+      "class_name": "HttpResponseTextCheck",
+      "url": "#{RESOURCE_UPDATE_API}",
+      "included_text": "No request body data"
+    },
+    {
+      "name": "Ckan resource id list check",
+      "module_name": "ckanext.hdx_service_checker.checks.checks",
+      "class_name": "HttpResponseTextCheck",
+      "url": "#{RESOURCE_ID_LIST_API}",
+      "included_text": "Access denied"
+    },
+    {
+      "name": "Spatial server check",
+      "module_name": "ckanext.hdx_service_checker.checks.checks",
+      "class_name": "HttpResponseTextCheck",
+      "url": "#{CHECKS_SPATIAL_URL}",
+      "included_text": "pre_"
+    }
+  ]
