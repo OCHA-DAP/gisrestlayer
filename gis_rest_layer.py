@@ -49,8 +49,10 @@ for code in wexceptions.default_exceptions.iterkeys():
 
 import deleteapi.delete_api as delete_api
 import importapi.import_api as import_api
+import checksapi.checks_api as checks_api
 app.register_blueprint(import_api.import_api)
 app.register_blueprint(delete_api.delete_api)
+app.register_blueprint(checks_api.checks_api)
 
 rq_dashboard.RQDashboard(app, url_prefix='/monitor')
 

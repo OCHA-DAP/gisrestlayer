@@ -2,3 +2,4 @@ flask
 rq
 rq-dashboard
 psycopg2>=2.6.1
+ckanext-hdx_service_checker
