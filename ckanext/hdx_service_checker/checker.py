@@ -58,7 +58,7 @@ class Checker(object):
             if not var_value:
                 raise exceptions.ParamMissingException('{} is not a runtime variable'.format(var_name))
             else:
-                return var_value
+                return str(var_value)
 
         for key in config.keys():
             val = config.get(key)
