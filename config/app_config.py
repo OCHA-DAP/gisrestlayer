@@ -50,4 +50,4 @@ class Config(object):
     VERIFY_CKAN_SSL = True
 
     # Path to json config file for checks
-    CHECKS_CONFIG_PATH = '/home/alex/PycharmProjects/GISRestLayer/config/config.json'
+    CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
