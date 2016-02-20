@@ -48,3 +48,6 @@ class Config(object):
 
     CKAN_SERVER_URL = 'replace.with.url.of.ckan.server'
     VERIFY_CKAN_SSL = True
+
+    # Path to json config file for checks
+    CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
