@@ -28,7 +28,9 @@ logger.info('Starting Application GISRestLayer')
 
 redis_connection = Redis(host=app.config.get('REDIS_HOST', 'redis'), db=app.config.get('REDIS_DB', 1),
                          port=app.config.get('REDIS_PORT', 6379))
-q = Queue("geo_q", connection=redis_connection)
+
+geo_q = Queue("geo_q", connection=redis_connection)
+analytics_q = Queue("analytics_q", connection=redis_connection)
 
 
 def make_json_error(ex):
@@ -50,9 +52,11 @@ for code in wexceptions.default_exceptions.iterkeys():
 import deleteapi.delete_api as delete_api
 import importapi.import_api as import_api
 import checksapi.checks_api as checks_api
+import analyticsapi.analytics_api as analytics_api
 app.register_blueprint(import_api.import_api)
 app.register_blueprint(delete_api.delete_api)
 app.register_blueprint(checks_api.checks_api)
+app.register_blueprint(analytics_api.analytics_api)
 
 rq_dashboard.RQDashboard(app, url_prefix='/monitor')
 
