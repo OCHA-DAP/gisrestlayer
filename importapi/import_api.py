@@ -27,7 +27,7 @@ logger.info('import_api blueprint loaded')
 
 @import_api.route('/api/add-layer/dataset/<string:dataset_id>/resource/<string:resource_id>', methods=['GET'])
 def add_layer(dataset_id, resource_id):
-    from gis_rest_layer import q
+    from gis_rest_layer import geo_q
     data_dict = {
         'state': 'processing',
         'message': 'The processing of the geo-preview has started',
@@ -65,7 +65,7 @@ def add_layer(dataset_id, resource_id):
 
         }
 
-        q.enqueue_call(func=create_preview_task.create_preview_task, args=[task_arguments],
+        geo_q.enqueue_call(func=create_preview_task.create_preview_task, args=[task_arguments],
                        timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
         # For debugging purposes, comment line above and uncomment line below.
         # That way no rq tasks will be created.
