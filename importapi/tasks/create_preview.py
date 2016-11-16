@@ -166,6 +166,9 @@ class CreatePreviewTask(object):
 
         execute = [
             'ogr2ogr',
+            '--config',
+            'PG_USE_COPY',
+            'NO',
             '-f',
             '"PostgreSQL"',
             'PG:host={} dbname={} port={} user={} password={}'.format(self.db_host, self.db_name, self.db_port, self.db_user, self.db_pass),
