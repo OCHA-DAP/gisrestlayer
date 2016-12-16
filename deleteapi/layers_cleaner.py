@@ -16,7 +16,8 @@ class LayersCleaner(object):
         self.db_pass = db_params['db_pass']
         self.table_name_prefix = db_params['table_name_prefix']
 
-        self.resource_id_list_api = ckan_params['resource_id_list_api']
+        self.resource_id_list_api = '{}/{}'.format(ckan_params['ckan_api_base_url'],
+                                                   ckan_params['resource_id_list_action'])
         self.api_key = ckan_params['ckan_api_key']
         self.verify_ckan_ssl = ckan_params['verify_ckan_ssl']
 

@@ -4,6 +4,7 @@ import logging
 import logging.config
 
 import rq_dashboard
+import rq_scheduler
 
 from redis import Redis
 from rq import Queue
@@ -31,7 +32,9 @@ redis_connection = Redis(host=app.config.get('REDIS_HOST', 'redis'), db=app.conf
 
 geo_q = Queue("geo_q", connection=redis_connection)
 analytics_q = Queue("analytics_q", connection=redis_connection)
+default_scheduler_q = Queue("default_scheduler_q", connection=redis_connection)
 
+scheduler = rq_scheduler.Scheduler(queue_name='default_scheduler_q', connection=redis_connection)
 
 def make_json_error(ex):
     resp = {
@@ -53,10 +56,13 @@ import deleteapi.delete_api as delete_api
 import importapi.import_api as import_api
 import checksapi.checks_api as checks_api
 import analyticsapi.analytics_api as analytics_api
+import schedulerapi.scheduler_api as scheduler_api
+
 app.register_blueprint(import_api.import_api)
 app.register_blueprint(delete_api.delete_api)
 app.register_blueprint(checks_api.checks_api)
 app.register_blueprint(analytics_api.analytics_api)
+app.register_blueprint(scheduler_api.scheduler_api)
 
 rq_dashboard.RQDashboard(app, url_prefix='/monitor')
 

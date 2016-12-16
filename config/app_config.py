@@ -16,11 +16,14 @@ class Config(object):
 
     GIS_API_PATTERN = 'http://localhost/services/tables/{table_name}'
 
+    # Base url need to build calls to CKAN API
+    CKAN_API_BASE_URL = 'http://172.17.42.1:5000/api/action'
+
     # Needed to push the results back to CKAN
-    RESOURCE_UPDATE_API = 'http://172.17.42.1:5000/api/action/hdx_resource_update_metadata'
+    RESOURCE_UPDATE_ACTION = 'hdx_resource_update_metadata'
 
     # Needed for finding all existing resources
-    RESOURCE_ID_LIST_API = 'http://172.17.42.1:5000/api/action/hdx_resource_id_list'
+    RESOURCE_ID_LIST_ACTION = 'hdx_resource_id_list'
 
     # No worries, this is a dummy api key
     CKAN_API_KEY = 'e2a174b1-4d1c-42ac-afb3-28926b61a663'
