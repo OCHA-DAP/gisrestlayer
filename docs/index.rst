@@ -12,6 +12,8 @@ Contents:
    :maxdepth: 2
 
    README
+   SCHEDULER
+   CHANGELOG
    sources
 
 

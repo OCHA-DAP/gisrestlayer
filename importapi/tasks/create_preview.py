@@ -36,7 +36,7 @@ class CreatePreviewTask(object):
         self.timeout = args['timeout_sec']
         # self.worker_timeout = args['worker_timeout_sec']
         self.api_key = args['ckan_api_key']
-        self.resource_update_api = args['resource_update_api']
+        self.resource_update_api = '{}/{}'.format(args['ckan_api_base_url'], args['resource_update_action'])
         self.gis_api_pattern = args['gis_api_pattern']
         self.table_prefix = args['table_name_prefix']
 

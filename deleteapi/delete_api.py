@@ -29,7 +29,8 @@ def delete_layers(dry_run):
             'table_name_prefix': app.config.get('TABLE_NAME_PREFIX', 'pre')
         }
         ckan_params = {
-            'resource_id_list_api': app.config.get('RESOURCE_ID_LIST_API'),
+            'ckan_api_base_url': app.config.get('CKAN_API_BASE_URL'),
+            'resource_id_list_action': app.config.get('RESOURCE_ID_LIST_ACTION'),
             'ckan_api_key': app.config.get('CKAN_API_KEY'),
             'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True)
         }

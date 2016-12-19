@@ -1,6 +1,7 @@
-flask
-rq
+flask==0.11.1
+rq==0.6.0
 rq-dashboard==0.3.4
-psycopg2>=2.6.1
+rq-scheduler==0.7.0
+psycopg2==2.6.1
 ckanext-hdx_service_checker
-mixpanel>=4.3.0
+mixpanel==4.3.1
