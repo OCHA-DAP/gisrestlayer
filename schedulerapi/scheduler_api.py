@@ -21,6 +21,25 @@ logger.info('scheduler_api blueprint loaded')
 
 @scheduler_api.route('/api/scheduler/add_job', methods=['POST'])
 def add_job():
+    '''
+    Expects something like below in POST body
+
+    .. code-block:: json
+
+      {
+        "action": "ckan_action",
+        "method": "post",
+        "sch_minutes": 1,
+        "sch_hours": 1,
+        "sch_days": 1,
+        "api_params": {
+            "id": "simple-analytics-test-5"
+        }
+      }
+
+    :return: json of the form: `{'success': False, 'message': 'error message'}`
+    :rtype: str
+    '''
     from gis_rest_layer import scheduler
     try:
         call_arguments = request.get_json()
