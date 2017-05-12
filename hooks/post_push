@@ -2,11 +2,11 @@
 
 echo "Building hdx-gisworker..."
 
-cd docker/gisworker 
+cd docker/gisworker
 
 sed -i "s/THISTAG/$SOURCE_BRANCH/" Dockerfile
 
-docker build -t unocha/hdx-gisworker:$SOURCE_BRANCH
+docker build -t unocha/hdx-gisworker:$SOURCE_BRANCH .
 
 docker push unocha/hdx-gisworker:$SOURCE_BRANCH
 
