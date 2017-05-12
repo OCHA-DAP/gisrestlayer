@@ -32,6 +32,7 @@ class CreatePreviewTask(object):
         self.verify_ckan_ssl = args['verify_ckan_ssl']
         self.ckan_server_url = args['ckan_server_url']
         self.url_type = args['url_type']
+        self.download_chunk_size = args['download_chunk_size']
         self.max_file_size = args['max_file_size_mb']
         self.timeout = args['timeout_sec']
         # self.worker_timeout = args['worker_timeout_sec']
@@ -82,8 +83,6 @@ class CreatePreviewTask(object):
 
     def download_file(self, layer_id):
 
-        chunk_size = 1024 * 1024  # 1 MB
-
         # timeout for both setting up a connection and reading first byte is 12 sec
         r = None
         if self.ckan_server_url in self.download_url:  # if URL is on the CKAN site
@@ -113,15 +112,20 @@ class CreatePreviewTask(object):
 
         with open(filepath, "wb") as fh:
             try:
-                for chunk in r.iter_content(chunk_size):
-                    if time.time() - start > self.timeout:
-                        logger.error('Timeout while downloading file {}'.format(self.download_url))
-                        raise exceptions.TimeoutException('timeout reached')
+                for chunk in r.iter_content(self.download_chunk_size):
 
                     size += len(chunk)
                     if size > self.max_file_size:
                         logger.error('Size exceeded while downloading file {}'.format(self.download_url))
                         raise exceptions.FileTooLargeException('response too large')
+
+                    passed_time = time.time() - start
+
+                    if passed_time > self.timeout:
+                        logger.error('Timeout while downloading file {}'.format(self.download_url))
+                        raise exceptions.TimeoutException('timeout reached')
+                    else:
+                        logger.debug("Passed time {} ; Size {}".format(passed_time, size))
 
                     fh.write(chunk)
                 file_to_be_pushed = filepath
