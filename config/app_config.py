@@ -4,6 +4,7 @@ class Config(object):
     DEBUG = False
     APP_PORT = 5000
     MAX_FILE_SIZE_MB = 300
+    DOWNLOAD_CHUNK_SIZE_MB = 5
     TIMEOUT_SEC = 120
 
     DB_NAME = 'gis'
