@@ -273,7 +273,11 @@ class CreatePreviewTask(object):
         if self.resource_update_api and self.api_key:
             try:
                 shape_info_json = json.dumps(shape_info_dict)
-                data_json = json.dumps({'id': self.resource_id, 'shape_info': shape_info_json})
+                data_json = json.dumps({
+                    'id': self.resource_id,
+                    'shape_info': shape_info_json,
+                    'batch_mode': 'KEEP_OLD'
+                })
                 logger.debug('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id,
                                                                                                        data_json))
                 r = requests.post(self.resource_update_api,
