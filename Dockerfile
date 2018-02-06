@@ -1,6 +1,8 @@
 FROM unocha/hdx-base-gislayer:alpine
 
-COPY docker /srv/
+WORKDIR /srv/gislayer
+
+COPY . .
 
 RUN apk add --update-cache \
         python && \
@@ -16,14 +18,10 @@ RUN apk add --update-cache \
         postgresql-dev \
         build-base \
         python-dev && \
-    mkdir -p /srv && \
-    cd /srv && \
-    git clone https://bitbucket.org/agartner/gisrestlayer.git gislayer && \
-    cd /srv/gislayer && \
     pip install -r requirements.txt && \
     pip install requests && \
     mkdir -p /etc/services.d/gislayer && \
-    mv /srv/run_gislayer /etc/services.d/gislayer/run && \
+    mv docker/run_gislayer /etc/services.d/gislayer/run && \
     apk del \
         .build-deps \
         postgresql-dev \
