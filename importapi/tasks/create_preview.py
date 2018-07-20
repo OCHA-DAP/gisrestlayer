@@ -49,6 +49,11 @@ class CreatePreviewTask(object):
 
         self.tmp_download_directory = args['tmp_download_directory']
 
+        self.headers_for_ckan = {
+            'User-Agent': 'HDXINTERNAL_GEOPREVIEW',
+            'Authorization': self.api_key
+        }
+
     def process(self):
         logger.info(
             "In create_preview_task for {}, {}, {}".format(self.dataset_id, self.resource_id, self.download_url))
@@ -87,7 +92,7 @@ class CreatePreviewTask(object):
         r = None
         if self.ckan_server_url in self.download_url:  # if URL is on the CKAN site
             r = requests.get(self.download_url, stream=True, timeout=12, verify=self.verify_ckan_ssl,
-                             headers={"Authorization": self.api_key})
+                             headers=self.headers_for_ckan)
         else:
             r = requests.get(self.download_url, stream=True, timeout=12)
         r.raise_for_status()
@@ -280,9 +285,11 @@ class CreatePreviewTask(object):
                 })
                 logger.debug('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id,
                                                                                                        data_json))
+                headers = {'content-type': 'application/json'}
+                headers.update(self.headers_for_ckan)
                 r = requests.post(self.resource_update_api,
                                   data=data_json,
-                                  headers={"Authorization": self.api_key, 'content-type': 'application/json'},
+                                  headers=headers,
                                   verify=self.verify_ckan_ssl)
                 logger.info(
                     'Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
