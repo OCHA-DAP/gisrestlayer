@@ -50,7 +50,7 @@ class CreatePreviewTask(object):
         self.tmp_download_directory = args['tmp_download_directory']
 
         self.headers_for_ckan = {
-            'User-Agent': 'HDXINTERNAL_GEOPREVIEW',
+            'User-Agent': args['hdx_user_agent'],
             'Authorization': self.api_key
         }
 
