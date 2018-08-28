@@ -29,3 +29,5 @@ CKAN_SERVER_URL = '${HDX_PREFIX}data.${HDX_DOMAIN}'
 CKAN_API_BASE_URL = 'http://ckan:5000/api/action'
 
 CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
+
+HDX_USER_AGENT = '${HDX_USER_AGENT}'

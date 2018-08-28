@@ -63,7 +63,8 @@ def add_job():
             'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True),
             'ckan_api_key': app.config.get('CKAN_API_KEY'),
             'ckan_api_base_url': app.config.get('CKAN_API_BASE_URL'),
-            'task_args': call_arguments
+            'task_args': call_arguments,
+            'hdx_user_agent': app.config.get('HDX_USER_AGENT')
         }
 
         scheduler.enqueue_in(delta, make_api_call.schedule_api_task, args=args,

@@ -1,5 +1,7 @@
 FROM unocha/hdx-base-gislayer:alpine
 
+ENV HDX_USER_AGENT=HDXINTERNAL_GEOPREVIEW
+
 WORKDIR /srv/gislayer
 
 COPY . .

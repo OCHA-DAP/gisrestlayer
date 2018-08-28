@@ -55,3 +55,6 @@ class Config(object):
 
     # Path to json config file for checks
     CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
+
+    # User Agent that will be used when making calls
+    HDX_USER_AGENT = 'GISLAYER'
