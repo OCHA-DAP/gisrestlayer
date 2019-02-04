@@ -73,7 +73,7 @@ class CreatePreviewTask(object):
             self.push_file_to_postgis(file_to_be_pushed, layer_id)
             layer_metadata = self.fetch_layer_metadata_from_db(layer_id)
             data_dict.update(layer_metadata)
-            self.notify_gis_server(layer_id)
+            # self.notify_gis_server(layer_id)
         except Exception, e:
             data_dict['state'] = 'failure'
             data_dict['message'] = str(e)
@@ -82,6 +82,9 @@ class CreatePreviewTask(object):
                 data_dict['type'] = e.type
             except AttributeError:
                 data_dict['type'] = 'unknown'
+
+
+
 
         self.push_information_back_to_ckan(data_dict)
         self.delete_download_directory()
@@ -267,11 +270,11 @@ class CreatePreviewTask(object):
             'layer_fields': layer_fields
         }
 
-    def notify_gis_server(self, resource_id):
-        gis_api_url = self.gis_api_pattern.format(table_name=resource_id)
-        r = requests.get(gis_api_url, verify=self.verify_ckan_ssl)
-        r.raise_for_status()
-        r.close()
+    # def notify_gis_server(self, resource_id):
+    #     gis_api_url = self.gis_api_pattern.format(table_name=resource_id)
+    #     r = requests.get(gis_api_url, verify=self.verify_ckan_ssl)
+    #     r.raise_for_status()
+    #     r.close()
 
     def push_information_back_to_ckan(self, shape_info_dict):
 
