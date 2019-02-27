@@ -18,14 +18,14 @@ dbport=5432
 # set my worker name
 #myname=$(env | grep DB_NAME | sed -e 's/.*_gis/gis/; s/\/.*//')
 #name="--name "$myname
-name=""
+name=$(ifconfig eth0 | grep inet | awk '{ print $2 }' | awk -F \: '{ print $2 }')
 
 #ttl="--worker-ttl 600"
 ttl=""
 
 # not needed, it seems
-envsubst < /srv/app.conf.tpl > /srv/app.conf
+envsubst < /srv/gislayer/docker/app.conf.tpl > /srv/app.conf
 export GIS_REST_LAYER_CONF=/srv/app.conf
 
 cd /srv/gislayer
-exec rqworker --url redis://gisredis:6379/1 $name --worker-ttl 600 geo_q analytics_q
+exec rqworker --url redis://gisredis:6379/1 --name worker-$name --worker-ttl 600 geo_q analytics_q
