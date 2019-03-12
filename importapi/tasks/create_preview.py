@@ -48,6 +48,7 @@ class CreatePreviewTask(object):
         self.db_pass = args['db_pass']
 
         self.tmp_download_directory = args['tmp_download_directory']
+        self.download_directory = None
 
         self.headers_for_ckan = {
             'User-Agent': args['hdx_user_agent'],
