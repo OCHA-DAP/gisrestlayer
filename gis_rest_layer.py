@@ -36,6 +36,8 @@ default_scheduler_q = Queue("default_scheduler_q", connection=redis_connection)
 
 scheduler = rq_scheduler.Scheduler(queue_name='default_scheduler_q', connection=redis_connection)
 
+
+@app.errorhandler(Exception)
 def make_json_error(ex):
     resp = {
         'message': str(ex),
@@ -49,8 +51,9 @@ def make_json_error(ex):
                             else 500)
     return response
 
-for code in wexceptions.default_exceptions.iterkeys():
-    app.error_handler_spec[None][code] = make_json_error
+# for code in wexceptions.default_exceptions.iterkeys():
+#     app.error_handler_spec[None][code] = make_json_error
+
 
 import deleteapi.delete_api as delete_api
 import importapi.import_api as import_api
@@ -64,7 +67,8 @@ app.register_blueprint(checks_api.checks_api)
 app.register_blueprint(analytics_api.analytics_api)
 app.register_blueprint(scheduler_api.scheduler_api)
 
-rq_dashboard.RQDashboard(app, url_prefix='/monitor')
+# rq_dashboard.RQDashboard(app, url_prefix='/monitor')
+app.register_blueprint(rq_dashboard.blueprint, url_prefix="/monitor")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=app.config.get('APP_PORT', '5000'), processes=1 )
