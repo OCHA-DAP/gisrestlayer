@@ -47,17 +47,11 @@ def add_layer(dataset_id, resource_id):
             'max_file_size_mb': app.config.get('MAX_FILE_SIZE_MB', 1) * 1024 * 1024,
             'timeout_sec': app.config.get('TIMEOUT_SEC', 1),
             # 'worker_timeout_sec': app.config.get('RQ_WORKER_TIMEOUT', 180),
-            'ckan_api_key': app.config.get('CKAN_API_KEY'),
             'ckan_api_base_url': app.config.get('CKAN_API_BASE_URL'),
             'resource_update_action': app.config.get('RESOURCE_UPDATE_ACTION'),
             'gis_api_pattern': app.config.get('GIS_API_PATTERN'),
             'table_name_prefix': app.config.get('TABLE_NAME_PREFIX', 'pre'),
 
-            'db_host': app.config.get('DB_HOST', 'db'),
-            'db_name': app.config.get('DB_NAME', 'gis'),
-            'db_user': app.config.get('DB_USER', 'ckan'),
-            'db_pass': app.config.get('DB_PASS', 'abc'),
-            'db_port': app.config.get('DB_PORT', 5432),
             'tmp_download_directory': app.config.get('TMP_DOWNLOAD_DIRECTORY', '/tmp'),
 
             'ckan_server_url': app.config.get('CKAN_SERVER_URL', 'data.humdata.org'),

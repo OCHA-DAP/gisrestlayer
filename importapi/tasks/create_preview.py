@@ -36,16 +36,18 @@ class CreatePreviewTask(object):
         self.max_file_size = args['max_file_size_mb']
         self.timeout = args['timeout_sec']
         # self.worker_timeout = args['worker_timeout_sec']
-        self.api_key = args['ckan_api_key']
+
         self.resource_update_api = '{}/{}'.format(args['ckan_api_base_url'], args['resource_update_action'])
         self.gis_api_pattern = args['gis_api_pattern']
         self.table_prefix = args['table_name_prefix']
 
-        self.db_host = args['db_host']
-        self.db_name = args['db_name']
-        self.db_user = args['db_user']
-        self.db_port = args['db_port']
-        self.db_pass = args['db_pass']
+        self.db_host = os.getenv('HDX_GISDB_HOST', 'gisdb')
+        self.db_name = os.getenv('HDX_GISDB_DB', 'gis')
+        self.db_user = os.getenv('HDX_GISDB_USER', 'gis')
+        self.db_port = os.getenv('HDX_GISDB_PORT', '5432')
+        self.db_pass = os.getenv('HDX_GISDB_PASS')
+
+        self.api_key = os.getenv('HDX_GIS_API_KEY')
 
         self.tmp_download_directory = args['tmp_download_directory']
         self.download_directory = None
