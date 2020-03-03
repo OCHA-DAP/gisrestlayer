@@ -32,21 +32,30 @@ class CreatePreviewTask(object):
         self.verify_ckan_ssl = args['verify_ckan_ssl']
         self.ckan_server_url = args['ckan_server_url']
         self.url_type = args['url_type']
+        self.download_chunk_size = args['download_chunk_size']
         self.max_file_size = args['max_file_size_mb']
         self.timeout = args['timeout_sec']
         # self.worker_timeout = args['worker_timeout_sec']
-        self.api_key = args['ckan_api_key']
-        self.resource_update_api = args['resource_update_api']
+
+        self.resource_update_api = '{}/{}'.format(args['ckan_api_base_url'], args['resource_update_action'])
         self.gis_api_pattern = args['gis_api_pattern']
         self.table_prefix = args['table_name_prefix']
 
-        self.db_host = args['db_host']
-        self.db_name = args['db_name']
-        self.db_user = args['db_user']
-        self.db_port = args['db_port']
-        self.db_pass = args['db_pass']
+        self.db_host = os.getenv('HDX_GISDB_HOST', 'gisdb')
+        self.db_name = os.getenv('HDX_GISDB_DB', 'gis')
+        self.db_user = os.getenv('HDX_GISDB_USER', 'gis')
+        self.db_port = os.getenv('HDX_GISDB_PORT', '5432')
+        self.db_pass = os.getenv('HDX_GISDB_PASS')
+
+        self.api_key = os.getenv('HDX_GIS_API_KEY')
 
         self.tmp_download_directory = args['tmp_download_directory']
+        self.download_directory = None
+
+        self.headers_for_ckan = {
+            'User-Agent': args['hdx_user_agent'],
+            'Authorization': self.api_key
+        }
 
     def process(self):
         logger.info(
@@ -67,7 +76,7 @@ class CreatePreviewTask(object):
             self.push_file_to_postgis(file_to_be_pushed, layer_id)
             layer_metadata = self.fetch_layer_metadata_from_db(layer_id)
             data_dict.update(layer_metadata)
-            self.notify_gis_server(layer_id)
+            # self.notify_gis_server(layer_id)
         except Exception, e:
             data_dict['state'] = 'failure'
             data_dict['message'] = str(e)
@@ -77,18 +86,19 @@ class CreatePreviewTask(object):
             except AttributeError:
                 data_dict['type'] = 'unknown'
 
+
+
+
         self.push_information_back_to_ckan(data_dict)
         self.delete_download_directory()
 
     def download_file(self, layer_id):
 
-        chunk_size = 1024 * 1024  # 1 MB
-
         # timeout for both setting up a connection and reading first byte is 12 sec
         r = None
         if self.ckan_server_url in self.download_url:  # if URL is on the CKAN site
             r = requests.get(self.download_url, stream=True, timeout=12, verify=self.verify_ckan_ssl,
-                             headers={"Authorization": self.api_key})
+                             headers=self.headers_for_ckan)
         else:
             r = requests.get(self.download_url, stream=True, timeout=12)
         r.raise_for_status()
@@ -113,15 +123,20 @@ class CreatePreviewTask(object):
 
         with open(filepath, "wb") as fh:
             try:
-                for chunk in r.iter_content(chunk_size):
-                    if time.time() - start > self.timeout:
-                        logger.error('Timeout while downloading file {}'.format(self.download_url))
-                        raise exceptions.TimeoutException('timeout reached')
+                for chunk in r.iter_content(self.download_chunk_size):
 
                     size += len(chunk)
                     if size > self.max_file_size:
                         logger.error('Size exceeded while downloading file {}'.format(self.download_url))
                         raise exceptions.FileTooLargeException('response too large')
+
+                    passed_time = time.time() - start
+
+                    if passed_time > self.timeout:
+                        logger.error('Timeout while downloading file {}'.format(self.download_url))
+                        raise exceptions.TimeoutException('timeout reached')
+                    else:
+                        logger.debug("Passed time {} ; Size {}".format(passed_time, size))
 
                     fh.write(chunk)
                 file_to_be_pushed = filepath
@@ -166,6 +181,9 @@ class CreatePreviewTask(object):
 
         execute = [
             'ogr2ogr',
+            '--config',
+            'PG_USE_COPY',
+            'NO',
             '-f',
             '"PostgreSQL"',
             'PG:host={} dbname={} port={} user={} password={}'.format(self.db_host, self.db_name, self.db_port, self.db_user, self.db_pass),
@@ -255,23 +273,29 @@ class CreatePreviewTask(object):
             'layer_fields': layer_fields
         }
 
-    def notify_gis_server(self, resource_id):
-        gis_api_url = self.gis_api_pattern.format(table_name=resource_id)
-        r = requests.get(gis_api_url, verify=self.verify_ckan_ssl)
-        r.raise_for_status()
-        r.close()
+    # def notify_gis_server(self, resource_id):
+    #     gis_api_url = self.gis_api_pattern.format(table_name=resource_id)
+    #     r = requests.get(gis_api_url, verify=self.verify_ckan_ssl)
+    #     r.raise_for_status()
+    #     r.close()
 
     def push_information_back_to_ckan(self, shape_info_dict):
 
         if self.resource_update_api and self.api_key:
             try:
                 shape_info_json = json.dumps(shape_info_dict)
-                data_json = json.dumps({'id': self.resource_id, 'shape_info': shape_info_json})
+                data_json = json.dumps({
+                    'id': self.resource_id,
+                    'shape_info': shape_info_json,
+                    'batch_mode': 'KEEP_OLD'
+                })
                 logger.debug('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id,
                                                                                                        data_json))
+                headers = {'content-type': 'application/json'}
+                headers.update(self.headers_for_ckan)
                 r = requests.post(self.resource_update_api,
                                   data=data_json,
-                                  headers={"Authorization": self.api_key, 'content-type': 'application/json'},
+                                  headers=headers,
                                   verify=self.verify_ckan_ssl)
                 logger.info(
                     'Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))

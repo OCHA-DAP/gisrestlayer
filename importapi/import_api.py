@@ -27,7 +27,7 @@ logger.info('import_api blueprint loaded')
 
 @import_api.route('/api/add-layer/dataset/<string:dataset_id>/resource/<string:resource_id>', methods=['GET'])
 def add_layer(dataset_id, resource_id):
-    from gis_rest_layer import q
+    from gis_rest_layer import geo_q
     data_dict = {
         'state': 'processing',
         'message': 'The processing of the geo-preview has started',
@@ -43,29 +43,27 @@ def add_layer(dataset_id, resource_id):
             'resource_id': resource_id,
             'download_url':  download_url,
             'url_type': _get_url_type(request),
-            'max_file_size_mb': app.config.get('MAX_FILE_SIZE_MB',1) * 1024 * 1024,
+            'download_chunk_size': app.config.get('DOWNLOAD_CHUNK_SIZE_MB', 1) * 1024 * 1024,
+            'max_file_size_mb': app.config.get('MAX_FILE_SIZE_MB', 1) * 1024 * 1024,
             'timeout_sec': app.config.get('TIMEOUT_SEC', 1),
             # 'worker_timeout_sec': app.config.get('RQ_WORKER_TIMEOUT', 180),
-            'ckan_api_key': app.config.get('CKAN_API_KEY'),
-            'resource_update_api': app.config.get('RESOURCE_UPDATE_API'),
+            'ckan_api_base_url': app.config.get('CKAN_API_BASE_URL'),
+            'resource_update_action': app.config.get('RESOURCE_UPDATE_ACTION'),
             'gis_api_pattern': app.config.get('GIS_API_PATTERN'),
             'table_name_prefix': app.config.get('TABLE_NAME_PREFIX', 'pre'),
 
-            'db_host': app.config.get('DB_HOST', 'db'),
-            'db_name': app.config.get('DB_NAME', 'gis'),
-            'db_user': app.config.get('DB_USER', 'ckan'),
-            'db_pass': app.config.get('DB_PASS', 'abc'),
-            'db_port': app.config.get('DB_PORT', 5432),
             'tmp_download_directory': app.config.get('TMP_DOWNLOAD_DIRECTORY', '/tmp'),
 
-            'ckan_server_url': app.config.get('CKAN_SERVER_URL', 'data.hdx.rwlabs.org'),
+            'ckan_server_url': app.config.get('CKAN_SERVER_URL', 'data.humdata.org'),
             'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True),
 
-            'logging_config': app.config.get('LOGGING_CONF_FILE')
+            'logging_config': app.config.get('LOGGING_CONF_FILE'),
+
+            'hdx_user_agent': app.config.get('HDX_USER_AGENT')
 
         }
 
-        q.enqueue_call(func=create_preview_task.create_preview_task, args=[task_arguments],
+        geo_q.enqueue_call(func=create_preview_task.create_preview_task, args=[task_arguments],
                        timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
         # For debugging purposes, comment line above and uncomment line below.
         # That way no rq tasks will be created.

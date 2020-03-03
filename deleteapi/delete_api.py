@@ -29,13 +29,14 @@ def delete_layers(dry_run):
             'table_name_prefix': app.config.get('TABLE_NAME_PREFIX', 'pre')
         }
         ckan_params = {
-            'resource_id_list_api': app.config.get('RESOURCE_ID_LIST_API'),
+            'ckan_api_base_url': app.config.get('CKAN_API_BASE_URL'),
+            'resource_id_list_action': app.config.get('RESOURCE_ID_LIST_ACTION'),
             'ckan_api_key': app.config.get('CKAN_API_KEY'),
             'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True)
         }
 
         dry_run_bool = False if dry_run == 'false' else True
-        cleaner = layers_cleaner.LayersCleaner(db_params, ckan_params, dry_run_bool)
+        cleaner = layers_cleaner.LayersCleaner(db_params, ckan_params, app.config.get('HDX_USER_AGENT'), dry_run_bool)
     except Exception, e:
         logger.error('There was a problem initializing the cleaning process: {}'.format(str(e)))
         data_dict = {}

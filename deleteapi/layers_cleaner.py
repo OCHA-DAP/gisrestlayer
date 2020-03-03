@@ -8,7 +8,7 @@ import deleteapi.exceptions.exceptions as exceptions
 logger = logging.getLogger(__name__)
 
 class LayersCleaner(object):
-    def __init__(self, db_params, ckan_params, dry_run=True):
+    def __init__(self, db_params, ckan_params, user_agent, dry_run=True):
         self.db_host = db_params['db_host']
         self.db_port = db_params['db_port']
         self.db_name = db_params['db_name']
@@ -16,9 +16,15 @@ class LayersCleaner(object):
         self.db_pass = db_params['db_pass']
         self.table_name_prefix = db_params['table_name_prefix']
 
-        self.resource_id_list_api = ckan_params['resource_id_list_api']
+        self.resource_id_list_api = '{}/{}'.format(ckan_params['ckan_api_base_url'],
+                                                   ckan_params['resource_id_list_action'])
         self.api_key = ckan_params['ckan_api_key']
         self.verify_ckan_ssl = ckan_params['verify_ckan_ssl']
+
+        self.request_headers = {
+            'User-Agent': user_agent,
+            'Authorization': self.api_key
+        }
 
         self.dry_run = dry_run
 
@@ -93,7 +99,7 @@ class LayersCleaner(object):
     def _fetch_resource_id_list(self):
         logger.debug('Before fetching resource ids from CKAN')
         r = requests.get(self.resource_id_list_api,
-                          headers={"Authorization": self.api_key},
+                          headers=self.request_headers,
                           verify=self.verify_ckan_ssl)
         r.raise_for_status()
 

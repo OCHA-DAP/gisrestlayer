@@ -3,14 +3,14 @@
       "name": "Ckan update resource check",
       "module_name": "ckanext.hdx_service_checker.checks.checks",
       "class_name": "HttpResponseTextCheck",
-      "url": "#{RESOURCE_UPDATE_API}",
-      "included_text": "No request body data"
+      "url": "#{CKAN_API_BASE_URL}/#{RESOURCE_UPDATE_ACTION}",
+      "included_text": "JSON Error"
     },
     {
       "name": "Ckan resource id list check",
       "module_name": "ckanext.hdx_service_checker.checks.checks",
       "class_name": "HttpResponseTextCheck",
-      "url": "#{RESOURCE_ID_LIST_API}",
+      "url": "#{CKAN_API_BASE_URL}/#{RESOURCE_ID_LIST_ACTION}",
       "included_text": "Access denied"
     },
     {

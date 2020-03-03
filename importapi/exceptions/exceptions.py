@@ -7,7 +7,7 @@ class GisRestLayerException(Exception):
         self.errors = exceptions
 
 class FileTooLargeException(GisRestLayerException):
-    type = 'file-to-large'
+    type = 'file-too-large'
 
 class TimeoutException(GisRestLayerException):
     type = 'timeout'
