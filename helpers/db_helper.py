@@ -39,7 +39,7 @@ class DbHelper(object):
         with self.con.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
-            result = [{key: value for key, value in row.iteritems()} for row in rows ]
+            result = [{key: value for key, value in row.items()} for row in rows]
         return result
 
     def exec_with_no_return(self, query, params):

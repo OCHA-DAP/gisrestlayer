@@ -1,6 +1,6 @@
-import gis_rest_layer
+from restlayer import create_app
 
-application = gis_rest_layer.app
+application = create_app()
 
 if __name__ == "__main__":
     application.run()

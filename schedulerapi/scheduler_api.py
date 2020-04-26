@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 app = flask.current_app
 
 scheduler_api = Blueprint('scheduler_api', __name__)
+scheduler_api_dict = {}
 logger.info('scheduler_api blueprint loaded')
 
 
@@ -40,7 +41,8 @@ def add_job():
     :return: json of the form: `{'success': False, 'message': 'error message'}`
     :rtype: str
     '''
-    from gis_rest_layer import scheduler
+    scheduler = scheduler_api_dict.get('scheduler')
+
     try:
         call_arguments = request.get_json()
 
@@ -73,7 +75,7 @@ def add_job():
         # make_api_call.schedule_api_task(args)
 
         result = {'success': True}
-    except Exception, e:
+    except Exception as e:
         error_message = 'Could not schedule job: {}'.format(str(e))
         logger.error(error_message)
         result = {'success': False, 'message': error_message}
@@ -82,7 +84,7 @@ def add_job():
 
 @scheduler_api.route('/api/scheduler/list_jobs', methods=['GET'])
 def list_jobs():
-    from gis_rest_layer import scheduler
+    scheduler = scheduler_api_dict.get('scheduler')
 
     job_list = scheduler.get_jobs()
     result = {

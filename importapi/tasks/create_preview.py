@@ -3,7 +3,7 @@ import logging
 import logging.config
 import shutil
 import subprocess
-import urlparse
+import future.moves.urllib.parse as urlparse
 import json
 import time
 import requests
@@ -77,7 +77,7 @@ class CreatePreviewTask(object):
             layer_metadata = self.fetch_layer_metadata_from_db(layer_id)
             data_dict.update(layer_metadata)
             # self.notify_gis_server(layer_id)
-        except Exception, e:
+        except Exception as e:
             data_dict['state'] = 'failure'
             data_dict['message'] = str(e)
             data_dict['error_class'] = type(e).__name__
@@ -214,7 +214,7 @@ class CreatePreviewTask(object):
                 # first time tryin to improt this file
                 output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
             logger.info('Pushed to POSTGIS {} successfully to table {}'.format(filepath, resource_id))
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             logger.warning(str(e))
             output = e.output
             logger.debug('ogr2ogr output: {}'.format(output))
@@ -299,7 +299,7 @@ class CreatePreviewTask(object):
                                   verify=self.verify_ckan_ssl)
                 logger.info(
                     'Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
-            except Exception, e:
+            except Exception as e:
                 logger.error(str(e))
         else:
             logger.error(
@@ -319,7 +319,7 @@ class CreatePreviewTask(object):
             try:
                 logger.info('Deleting folder {}'.format(self.download_directory))
                 shutil.rmtree(self.download_directory)
-            except Exception, e:
+            except Exception as e:
                 logger.error(str(e))
         else:
             logger.warning('Not deleting directory for resource id {} because download dir does not exist'.format(

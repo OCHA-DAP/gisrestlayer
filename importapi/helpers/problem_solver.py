@@ -55,10 +55,10 @@ class Solution(object):
         self.version += 1
 
     def has_env_key(self, key):
-        return self._env_dict.has_key(key)
+        return key in self._env_dict
 
     def has_ogr_key(self, key):
-        return self._ogr_dict.has_key(key)
+        return key in self._ogr_dict
 
     def has_env_keys(self,):
         return len(self._env_dict) > 0
@@ -71,13 +71,13 @@ class Solution(object):
         :return: iterator over the (key,value) env params
         :rtype: iterator
         '''
-        return self._env_dict.iteritems()
+        return self._env_dict.items()
 
     def get_ogr_items(self):
         '''
         :return: iterator over the (key,value) ogr params
         :rtype: iterator
         '''
-        return self._ogr_dict.iteritems()
+        return self._ogr_dict.items()
 
 
