@@ -9,8 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the docker-compose stack
-        run: docker-compose -f docker-compose-test.yml -p hdx_gislayer_test up -d
+        run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test up -d
       - name: Install testing dependencies
-        run: docker-compose -f docker-compose-test.yml -p hdx_gislayer_test exec -T gislayer pip3 install -r dev-requirements.txt
+        run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test exec -T gislayer pip3 install -r dev-requirements.txt
       - name: Run tests
-        run: docker-compose -f docker-compose-test.yml -p hdx_gislayer_test exec -T gislayer pytest --show-capture=log
+        run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test exec -T gislayer pytest --show-capture=log
