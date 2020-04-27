@@ -11,6 +11,8 @@ from rq import Queue
 
 import werkzeug.exceptions as wexceptions
 
+from restlayer.version import VERSION
+
 g = flask.g
 Flask = flask.Flask
 make_response = flask.make_response
@@ -75,5 +77,10 @@ def create_app():
                                 if isinstance(ex, wexceptions.HTTPException)
                                 else 500)
         return response
+
+    @app.route('/version', methods=['GET'])
+    @app.route('/about', methods=['GET'])
+    def about():
+        return flask.jsonify({"version": VERSION})
 
     return app

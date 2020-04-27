@@ -16,6 +16,7 @@ app = flask.current_app
 checks_api = Blueprint('checks_api', __name__)
 logger.info('checks_api blueprint loaded')
 
+
 @checks_api.route('/api/run-checks', methods=['GET'])
 def run_checks():
 
@@ -40,9 +41,10 @@ def run_checks():
     }
     return jsonify(result_wrapper)
 
+
 def __add_config_for_spatial(config):
     search_str = '/tables'
-    spatial_url = gis_api_pattern = config.get('GIS_API_PATTERN', '')
+    spatial_url = config.get('GIS_API_PATTERN', '')
     url_index = spatial_url.find(search_str)
     spatial_check_url = spatial_url[0:url_index + len(search_str)]
     config['CHECKS_SPATIAL_URL'] = spatial_check_url
