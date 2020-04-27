@@ -1,0 +1,20 @@
+version: "3"
+
+networks:
+  default:
+
+services:
+  gislayer:
+    build: ./
+    hostname: gislayer
+#    container_name: gislayer
+    environment:
+      TERM: 'xterm'
+      GIS_REST_LAYER_CONF: '/srv/gislayer/tests/test_app.conf'
+    entrypoint: 'tail -f /dev/null'
+  gisredis:
+    image: unocha/alpine-redis:3.2.8
+    hostname: gisredis
+#    container_name: ${PREFIX}-${STACK}-gisredis
+    environment:
+      TERM: 'xterm'

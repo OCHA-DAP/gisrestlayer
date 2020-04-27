@@ -1,0 +1,14 @@
+name: Run tests with docker-compose
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the docker-compose stack
+        run: docker-compose -f docker-compose-test.yml -p hdx_gislayer_test up -d
+      - name: Run tests
+        run: docker-compose -f docker-compose-test.yml -p hdx_gislayer_test exec gislayer pytest --show-capture=log
