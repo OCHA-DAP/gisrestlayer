@@ -29,9 +29,6 @@ class Config(object):
     # No worries, this is a dummy api key
     CKAN_API_KEY = 'e2a174b1-4d1c-42ac-afb3-28926b61a663'
 
-    # URL or hostname of the redis server
-    REDIS_HOST = 'redis'
-
     LOGGING_CONF_FILE = 'logging.conf'
 
     # REDIS SPECIFIC CONFIGURATION
@@ -47,8 +44,6 @@ class Config(object):
 
     # How long can a worker work on a task
     RQ_WORKER_TIMEOUT = 300
-
-    DEBUG = False
 
     CKAN_SERVER_URL = 'replace.with.url.of.ckan.server'
     VERIFY_CKAN_SSL = True

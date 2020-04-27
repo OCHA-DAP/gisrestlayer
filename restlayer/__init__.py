@@ -21,7 +21,6 @@ def create_app():
 
     app = Flask(__name__)
 
-
     app.config.from_object('config.app_config.Config')
     app.config.from_envvar('GIS_REST_LAYER_CONF')
     app.config['DEBUG'] = False
