@@ -1,15 +1,12 @@
-import flask
-
 import logging
 import logging.config
 
+import flask
 import rq_dashboard
 import rq_scheduler
-
+import werkzeug.exceptions as wexceptions
 from redis import Redis
 from rq import Queue
-
-import werkzeug.exceptions as wexceptions
 
 from restlayer.version import VERSION
 
@@ -63,6 +60,11 @@ def create_app():
     # rq_dashboard.RQDashboard(app, url_prefix='/monitor')
     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/monitor")
 
+    @app.route('/version', methods=['GET'])
+    @app.route('/about', methods=['GET'])
+    def about():
+        return flask.jsonify({"version": VERSION})
+
     @app.errorhandler(Exception)
     def make_json_error(ex):
         logger.error(str(ex))
@@ -77,10 +79,5 @@ def create_app():
                                 if isinstance(ex, wexceptions.HTTPException)
                                 else 500)
         return response
-
-    @app.route('/version', methods=['GET'])
-    @app.route('/about', methods=['GET'])
-    def about():
-        return flask.jsonify({"version": VERSION})
 
     return app

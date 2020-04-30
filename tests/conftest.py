@@ -1,4 +1,5 @@
 import pytest
+
 from restlayer import create_app
 
 
@@ -10,9 +11,7 @@ def app():
 
 @pytest.fixture(scope='module')
 def context_app(app):
-    print ('zzzzzz')
     with app.test_request_context():
-        print('xxxxx')
         yield
 
     # def run_at_the_end():
