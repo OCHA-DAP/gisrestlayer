@@ -1,6 +1,8 @@
 import os
 import zipfile
 
+from builtins import str as text
+
 
 class Unzipper(object):
 
@@ -16,7 +18,7 @@ class Unzipper(object):
         infolist = zip.infolist()
         for info in infolist:
             info.filename = ''.join(i if i.isalnum() or i == '.' else '_' for i in info.filename)
-            zip.extract(info, unicode(self.zipdir))
+            zip.extract(info, text(self.zipdir))
         #zip.extractall(self.zipdir)
         # zip.extractall(self.zipdir)
         zip.close()

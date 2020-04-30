@@ -1,5 +1,7 @@
 import logging
 
+from functools import reduce
+
 logger = logging.getLogger(__name__)
 
 
