@@ -1,6 +1,6 @@
 |Tests with docker-compose|
 
-.. |Tests with docker-compose| image:: https://github.com/alexandru-m-g/gisrestlayer/workflows/Run%20tests%20with%20docker-compose/badge.svg
+.. |Tests with docker-compose| image:: https://github.com/OCHA-DAP/gisrestlayer/workflows/Tests%20with%20docker-compose/badge.svg
 
 README - HDX JOB PROCESSOR
 ==========================
