@@ -45,5 +45,5 @@ class ScheduledApiTask(log_config.LogConfigHelper):
 
             r.raise_for_status()
 
-        except Exception, e:
+        except Exception as e:
             logger.error('Problem when trying to make api call:' + str(e))

@@ -1,6 +1,5 @@
 import logging
 import requests
-import sets
 
 import helpers.db_helper as db_helper
 import deleteapi.exceptions.exceptions as exceptions

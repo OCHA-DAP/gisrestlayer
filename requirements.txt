@@ -3,6 +3,9 @@ redis==3.2.1
 rq==0.13.0
 rq-dashboard==0.4.0
 rq-scheduler==0.7.0
-psycopg2==2.6.1
+psycopg2==2.8.5
 ckanext-hdx_service_checker==0.0.8
 mixpanel==4.3.1
+requests
+
+future

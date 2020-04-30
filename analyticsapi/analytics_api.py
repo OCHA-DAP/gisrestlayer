@@ -13,12 +13,13 @@ logger = logging.getLogger(__name__)
 app = flask.current_app
 
 analytics_api = Blueprint('analytics_api', __name__)
+analytics_api_dict = {}
 logger.info('analytics_api blueprint loaded')
 
 
 @analytics_api.route('/api/send-analytics', methods=['POST'])
 def add_layer():
-    from gis_rest_layer import analytics_q
+    analytics_q = analytics_api_dict.get('analytics_q')
 
     event_arguments = request.get_json()
 

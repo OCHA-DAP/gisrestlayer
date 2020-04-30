@@ -1,0 +1,20 @@
+name: Tests with docker-compose
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the docker-compose stack
+        run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test up -d
+        env:
+          TEST_POSTGIS_PASSWORD: ${{secrets.TEST_POSTGIS_PASSWORD}}
+      - name: Wait for stack to initialize
+        run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test exec -T gislayer sleep 5
+      - name: Install testing dependencies
+        run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test exec -T gislayer pip3 install -r dev-requirements.txt
+      - name: Run tests
+        run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test exec -T gislayer pytest --show-capture=log

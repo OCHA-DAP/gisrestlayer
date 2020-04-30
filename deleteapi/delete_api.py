@@ -37,7 +37,7 @@ def delete_layers(dry_run):
 
         dry_run_bool = False if dry_run == 'false' else True
         cleaner = layers_cleaner.LayersCleaner(db_params, ckan_params, app.config.get('HDX_USER_AGENT'), dry_run_bool)
-    except Exception, e:
+    except Exception as e:
         logger.error('There was a problem initializing the cleaning process: {}'.format(str(e)))
         data_dict = {}
         data_dict['state'] = 'failure'

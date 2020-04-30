@@ -19,6 +19,8 @@ app = flask.current_app
 import_api = Blueprint('import_api', __name__)
 logger.info('import_api blueprint loaded')
 
+import_api_dict = {}
+
 # redis_connection = Redis(host='redis', db=1)
 # redis_connection = Redis(host=app.config.get('REDIS_HOST', 'redis'), db=app.config.get('REDIS_DB', 1),
 #                          port=app.config.get('REDIS_PORT', 6379))
@@ -27,7 +29,7 @@ logger.info('import_api blueprint loaded')
 
 @import_api.route('/api/add-layer/dataset/<string:dataset_id>/resource/<string:resource_id>', methods=['GET'])
 def add_layer(dataset_id, resource_id):
-    from gis_rest_layer import geo_q
+    geo_q = import_api_dict.get('geo_q')
     data_dict = {
         'state': 'processing',
         'message': 'The processing of the geo-preview has started',
@@ -71,7 +73,7 @@ def add_layer(dataset_id, resource_id):
 
         logger.debug("Started create_preview_task for {}, {}, {}".format(dataset_id, resource_id, download_url))
 
-    except Exception, e:
+    except Exception as e:
         data_dict['state'] = 'failure'
         data_dict['message'] = str(e)
         data_dict['error_class'] = type(e).__name__
@@ -86,7 +88,7 @@ def add_layer(dataset_id, resource_id):
 def _get_download_url(request):
     try:
         return request.args['resource_download_url']
-    except Exception, e:
+    except Exception as e:
         raise exceptions.MissingUrlException("Url missing or has a problem", [e])
 
 def _get_url_type(request):
