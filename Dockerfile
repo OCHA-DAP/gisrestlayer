@@ -1,4 +1,4 @@
-FROM unocha/alpine-base-s6-python3:3.11.2
+FROM unocha/hdx-gislayer:base-0.6.0
 
 ENV HDX_USER_AGENT=HDXINTERNAL_GEOPREVIEW
 
