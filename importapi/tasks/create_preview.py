@@ -1,16 +1,18 @@
-import os
+import json
 import logging
 import logging.config
+import os
 import shutil
 import subprocess
-import future.moves.urllib.parse as urlparse
-import json
 import time
+
+import future.moves.urllib.parse as urlparse
 import requests
-import importapi.exceptions.exceptions as exceptions
-import importapi.helpers.zip as zip_helper
-import importapi.helpers.problem_solver as problem_solver
+
 import helpers.db_helper as db_helper
+import importapi.exceptions.exceptions as exceptions
+import importapi.helpers.problem_solver as problem_solver
+import importapi.helpers.zip as zip_helper
 
 logger = logging.getLogger(__name__)
 
@@ -217,6 +219,7 @@ class CreatePreviewTask(object):
         except subprocess.CalledProcessError as e:
             logger.warning(str(e))
             output = e.output
+            output = output.decode('utf-8', 'ignore') if output else ''
             logger.debug('ogr2ogr output: {}'.format(output))
 
             current_version = solution.version if solution else 0
