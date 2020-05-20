@@ -57,7 +57,7 @@ def gisdb_info_in_env():
     os.unsetenv("HDX_GIS_API_KEY")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def empty_tmp_folder():
     tmp_folder = GEOFILE_PATH.format('tmp')
     if os.path.exists(tmp_folder):
@@ -89,23 +89,50 @@ def test_create_preview_shapefile(args, gisdb_info_in_env, empty_tmp_folder):
     tmp_folder = empty_tmp_folder
 
     filename = 'test.shp.zip'
-    filepath = GEOFILE_PATH.format(filename)
-    tmp_filepath = tmp_folder + '/' + filename
-    copyfile(filepath, tmp_filepath)
+    create_preview_task, layer_metadata = _unzip_and_push(args, filename, tmp_folder)
 
-    unzipper = zip_helper.Unzipper(tmp_filepath)
-    unzipper.unzip()
-    file_to_be_pushed = unzipper.find_layer_file()
-
-    create_preview_task, layer_metadata = _push_file_and_get_metadata(args, file_to_be_pushed)
     assert layer_metadata.get('bounding_box') == \
         'BOX(34.00334232 -4.40810323599999,41.81483496 4.47561039300001)'
     assert len(layer_metadata.get('layer_fields')) == 45
 
-    create_preview_task.download_directory = tmp_folder
     create_preview_task.delete_download_directory()
 
     assert not os.path.exists(create_preview_task.download_directory)
+
+
+def test_create_preview_shapefile_with_multilinestring_problem(args, gisdb_info_in_env, empty_tmp_folder):
+    '''
+    Test shapefile used from https://github.com/Esri/arcgis-runtime-samples-data, Apache 2.0 license
+    '''
+    tmp_folder = empty_tmp_folder
+
+    filename = 'test2.shp.zip'
+    create_preview_task, layer_metadata = _unzip_and_push(args, filename, tmp_folder)
+
+    assert layer_metadata.get('bounding_box') == \
+           'BOX(-158.090073902174 21.2775052439187,-67.7811766716047 62.1452071164588)'
+    assert len(layer_metadata.get('layer_fields')) == 7
+
+    create_preview_task.delete_download_directory()
+
+    assert not os.path.exists(create_preview_task.download_directory)
+
+
+def _unzip_and_push(args, filename, tmp_folder):
+    file_to_be_pushed = _unzipping(filename, tmp_folder)
+    create_preview_task, layer_metadata = _push_file_and_get_metadata(args, file_to_be_pushed)
+    create_preview_task.download_directory = tmp_folder
+    return create_preview_task, layer_metadata
+
+
+def _unzipping(filename, tmp_folder):
+    filepath = GEOFILE_PATH.format(filename)
+    tmp_filepath = tmp_folder + '/' + filename
+    copyfile(filepath, tmp_filepath)
+    unzipper = zip_helper.Unzipper(tmp_filepath)
+    unzipper.unzip()
+    file_to_be_pushed = unzipper.find_layer_file()
+    return file_to_be_pushed
 
 
 def _push_file_and_get_metadata(args, filepath):
