@@ -1,8 +1,7 @@
 import logging
+from datetime import timedelta
+
 import flask
-
-from datetime import datetime, timedelta
-
 
 import schedulerapi.tasks.make_api_call as make_api_call
 
