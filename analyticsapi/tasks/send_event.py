@@ -4,7 +4,6 @@ import mixpanel
 import requests
 
 import analyticsapi.exceptions.exceptions as exceptions
-import helpers.log_config as log_config
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +28,12 @@ def send_event_task(task_arguments):
         raise exceptions.MissingTaskArgumentException('No flag to send to either Mixpanel or GA')
 
 
-class AbstractSendEvent(log_config.LogConfigHelper):
+class AbstractSendEvent(object):
     def __init__(self, task_arguments):
         '''
         :param task_arguments: task arguments
         :type task_arguments: dict
         '''
-        super(AbstractSendEvent, self).__init__(task_arguments)
         if not task_arguments.get('event_name'):
             raise exceptions.MissingTaskArgumentException('Missing event name')
 

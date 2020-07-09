@@ -28,4 +28,4 @@ envsubst < /srv/gislayer/docker/app.conf.tpl > /srv/app.conf
 export GIS_REST_LAYER_CONF=/srv/app.conf
 
 cd /srv/gislayer
-exec rqworker --log-format '%(asctime)s %(levelname)-5.5s [%(name)s:%(lineno)d] %(message)s' --url redis://gisredis:6379/1 --name worker-$name --worker-ttl 600 geo_q analytics_q
+exec ./hdxrq.py worker --url redis://gisredis:6379/1 --name worker-$name --worker-ttl 600 geo_q analytics_q

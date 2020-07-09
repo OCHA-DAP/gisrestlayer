@@ -1,5 +1,5 @@
 import json
-import logging.config
+import logging
 import os
 import shutil
 import subprocess
@@ -9,7 +9,6 @@ import future.moves.urllib.parse as urlparse
 import requests
 
 import helpers.db_helper as db_helper
-import helpers.log_config as log_config
 import importapi.exceptions.exceptions as exceptions
 import importapi.helpers.problem_solver as problem_solver
 import importapi.helpers.zip as zip_helper
@@ -24,10 +23,8 @@ def create_preview_task(task_arguments):
     return task.process()
 
 
-class CreatePreviewTask(log_config.LogConfigHelper):
+class CreatePreviewTask(object):
     def __init__(self, args):
-        super(CreatePreviewTask, self).__init__(args)
-
         self.dataset_id = args['dataset_id']
         self.resource_id = args['resource_id']
         self.download_url = args['download_url']

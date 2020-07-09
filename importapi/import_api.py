@@ -1,10 +1,9 @@
 import logging
-import flask
 
+import flask
 
 import importapi.exceptions.exceptions as exceptions
 import importapi.tasks.create_preview as create_preview_task
-
 
 g = flask.g
 request = flask.request
@@ -59,7 +58,7 @@ def add_layer(dataset_id, resource_id):
             'ckan_server_url': app.config.get('CKAN_SERVER_URL', 'data.humdata.org'),
             'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True),
 
-            'logging_config': app.config.get('LOGGING_CONF_FILE'),
+            # 'logging_config': app.config.get('LOGGING_CONF_FILE'),
 
             'hdx_user_agent': app.config.get('HDX_USER_AGENT')
 

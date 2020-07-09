@@ -23,7 +23,6 @@ def add_layer():
     analytics_q = analytics_api_dict.get('analytics_q')
 
     event_arguments = request.get_json()
-    event_arguments['logging_config'] = app.config.get('LOGGING_CONF_FILE')
 
     analytics_q.enqueue_call(func=send_event.send_event_task, args=[event_arguments],
                        timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
