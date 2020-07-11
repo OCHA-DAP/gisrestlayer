@@ -58,8 +58,9 @@ The code below needs to be run in the folder where the python code is
 
 .. code-block:: bash
 
-   rqworker --url redis://redis_ip:redis_port/1 --worker-ttl 600 geo_q
+   ./hdxrq.py worker --url redis://redis_ip:redis_port/1 --worker-ttl 600 geo_q
 
+Please note that *rqworker* was replaced by *./hdxrq.py worker*. More info can be found `here <LOGGING.rst>`_
 
 Sending Analytics Events
 ------------------------
@@ -81,6 +82,19 @@ The code below needs to be run in the folder where the python code is
 
 .. code-block:: bash
 
-   rqworker --url redis://redis_ip:redis_port/1 --worker-ttl 600 analytics_q
+   ./hdxrq.py worker --url redis://redis_ip:redis_port/1 --worker-ttl 600 analytics_q
+
+Please note that *rqworker* was replaced by *./hdxrq.py worker*. More info can be found `here <LOGGING.rst>`_
+
+Scheduling feature
+++++++++++++++++++
+
+The HDX Job Processor has support for scheduling (though it's unused at the moment). To read more about it go
+`here <schedulerapi/docs/README.rst>`_
 
 
+Logging
++++++++
+
+To read more about how logging is configured, look
+`here <LOGGING.rst>`_
