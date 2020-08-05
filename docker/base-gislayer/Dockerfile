@@ -4,7 +4,7 @@ FROM unocha/alpine-base-s6-python3:3.11.2
 
 ENV pkgver=2.2.4
 
-RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/testing >> \
+RUN echo http://dl-cdn.alpinelinux.org/alpine/edge/community >> \
         /etc/apk/repositories && \
     apk add --update-cache \
         proj-dev\
