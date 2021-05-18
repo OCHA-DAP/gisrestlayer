@@ -5,7 +5,7 @@ MAX_FILE_SIZE_MB = 300
 TIMEOUT_SEC = 120
 LOGGING_CONF_FILE = 'logging.conf'
 
-REDIS_HOST = '${HDX_REDIS_HOST}'
+REDIS_HOST = '${HDX_REDIS_ADDR}'
 REDIS_PORT = ${HDX_REDIS_PORT}
 REDIS_DB = ${HDX_REDIS_GISDB}
 
@@ -29,3 +29,9 @@ CKAN_API_BASE_URL = 'http://ckan:5000/api/action'
 CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
 
 HDX_USER_AGENT = '${HDX_USER_AGENT}'
+
+DB_HOST = '${DB_HOST}'
+DB_PORT = '${DB_PORT}'
+DB_NAME = '${DB_NAME}'
+DB_USER = '${DB_USER}'
+DB_PASS = '${DB_PASS}'
