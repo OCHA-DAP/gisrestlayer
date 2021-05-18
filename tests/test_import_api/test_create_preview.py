@@ -38,7 +38,7 @@ def args(app):
 def gisdb_info_in_env():
 
     # These should already be in the environment
-    # os.environ["HDX_GISDB_HOST"] = "test_gisdb"
+    # os.environ["HDX_GISDB_ADDR"] = "test_gisdb"
     # os.environ["HDX_GISDB_DB"] = "test_gisdb"
     # os.environ["HDX_GISDB_USER"] = "test_gisdb_user"
     # os.environ["HDX_GISDB_PORT"] = "5432"
@@ -49,7 +49,7 @@ def gisdb_info_in_env():
 
     yield True
 
-    # os.unsetenv("HDX_GISDB_HOST")
+    # os.unsetenv("HDX_GISDB_ADDR")
     # os.unsetenv("HDX_GISDB_DB")
     # os.unsetenv("HDX_GISDB_USER")
     # os.unsetenv("HDX_GISDB_PORT")

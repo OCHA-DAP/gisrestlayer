@@ -40,7 +40,7 @@ class CreatePreviewTask(object):
         self.gis_api_pattern = args['gis_api_pattern']
         self.table_prefix = args['table_name_prefix']
 
-        self.db_host = os.getenv('HDX_GISDB_HOST', 'gisdb')
+        self.db_host = os.getenv('HDX_GISDB_ADDR', 'gisdb')
         self.db_name = os.getenv('HDX_GISDB_DB', 'gis')
         self.db_user = os.getenv('HDX_GISDB_USER', 'gis')
         self.db_port = os.getenv('HDX_GISDB_PORT', '5432')
