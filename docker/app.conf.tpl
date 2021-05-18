@@ -29,3 +29,9 @@ CKAN_API_BASE_URL = 'http://ckan:5000/api/action'
 CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
 
 HDX_USER_AGENT = '${HDX_USER_AGENT}'
+
+DB_HOST = '${DB_HOST}'
+DB_PORT = '${DB_PORT}'
+DB_NAME = '${DB_NAME}'
+DB_USER = '${DB_USER}'
+DB_PASS = '${DB_PASS}'

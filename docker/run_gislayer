@@ -1,5 +1,11 @@
 #!/usr/bin/with-contenv sh
 
+[ ! -z "$HDX_GISDB_HOST" ] && export DB_HOST=$HDX_GISDB_HOST
+[ ! -z "$HDX_GISDB_PORT" ] && export DB_PORT=$HDX_GISDB_PORT
+[ ! -z "$HDX_GISDB_DB" ]   && export DB_NAME=$HDX_GISDB_DB
+[ ! -z "$HDX_GISDB_USER" ] && export DB_USER=$HDX_GISDB_USER
+[ ! -z "$HDX_GISDB_PASS" ] && export DB_PASS=$HDX_GISDB_PASS
+
 # regenerate app.conf
 envsubst < /srv/gislayer/docker/app.conf.tpl > /srv/app.conf
 
