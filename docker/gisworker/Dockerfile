@@ -1,4 +1,6 @@
-FROM unocha/hdx-gislayer:THISTAG
+ARG IMAGE_TAG=main
+
+FROM public.ecr.aws/unocha/hdx-gislayer:${IMAGE_TAG}
 
 COPY run_gisworker /srv/
 
