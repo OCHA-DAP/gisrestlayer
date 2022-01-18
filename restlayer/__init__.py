@@ -58,7 +58,7 @@ def create_app():
     scheduler_api.scheduler_api_dict['scheduler'] = scheduler
 
     # rq_dashboard.RQDashboard(app, url_prefix='/monitor')
-    app.register_blueprint(rq_dashboard.blueprint, url_prefix="/monitor")
+    app.register_blueprint(rq_dashboard.blueprint, url_prefix=app.config.get('MONITOR_URL', '/monitor'))
 
     @app.route('/version', methods=['GET'])
     @app.route('/about', methods=['GET'])

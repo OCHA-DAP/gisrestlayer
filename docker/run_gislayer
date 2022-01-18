@@ -6,6 +6,8 @@
 [ ! -z "$HDX_GISDB_USER" ] && export DB_USER=$HDX_GISDB_USER
 [ ! -z "$HDX_GISDB_PASS" ] && export DB_PASS=$HDX_GISDB_PASS
 
+[ -z "$MONITOR_URL" ] && MONITOR_URL="/monitor"
+
 # regenerate app.conf
 envsubst < /srv/gislayer/docker/app.conf.tpl > /srv/app.conf
 
