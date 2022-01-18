@@ -4,7 +4,7 @@
 [ -z "${HDX_REDIS_ADDR}" ]       && HDX_REDIS_ADDR=gisredis
 [ -z "${HDX_REDIS_PORT}" ]       && HDX_REDIS_PORT=6379
 [ -z "${HDX_REDIS_GISDB}" ]      && HDX_REDIS_GISDB=1
-[ -z "${HDX_QUEUES}" ]           && HDX_QUEUES="geo_q analytics_q"
+[ -z "${QUEUES}" ]               && QUEUES="geo_q analytics_q"
 
 WORKER_ID=$(ifconfig eth0 | grep inet | awk '{ print $2 }' | awk -F \: '{ print $2 }')
 
@@ -19,4 +19,4 @@ exec ./hdxrq.py worker \
     --url redis://${HDX_REDIS_ADDR}:${HDX_REDIS_PORT}/${HDX_REDIS_GISDB} \
     --name worker-${WORKER_ID} \
     --worker-ttl ${HDX_REDIS_WORKER_TTL} \
-    ${HDX_QUEUES}
+    ${QUEUES}
