@@ -28,6 +28,7 @@ CKAN_API_BASE_URL = 'http://ckan:5000/api/action'
 
 CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
 
+MONITOR_URL = '${MONITOR_URL}'
 HDX_USER_AGENT = '${HDX_USER_AGENT}'
 
 DB_HOST = '${DB_HOST}'

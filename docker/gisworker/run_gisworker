@@ -1,16 +1,22 @@
 #!/usr/bin/with-contenv sh
 
-[ -z ${HDX_REDIS_WORKER_TTL} ] && HDX_REDIS_WORKER_TTL=600
-[ -z ${HDX_REDIS_ADDR} ]       && HDX_REDIS_ADDR=gisredis
-[ -z ${HDX_REDIS_PORT} ]       && HDX_REDIS_PORT=6379
-[ -z ${HDX_REDIS_GISDB} ]      && HDX_REDIS_GISDB=1
+[ -z "${HDX_REDIS_WORKER_TTL}" ] && HDX_REDIS_WORKER_TTL=600
+[ -z "${HDX_REDIS_ADDR}" ]       && HDX_REDIS_ADDR=gisredis
+[ -z "${HDX_REDIS_PORT}" ]       && HDX_REDIS_PORT=6379
+[ -z "${HDX_REDIS_GISDB}" ]      && HDX_REDIS_GISDB=1
+[ -z "${QUEUES}" ]               && QUEUES="geo_q analytics_q"
 
 WORKER_ID=$(ifconfig eth0 | grep inet | awk '{ print $2 }' | awk -F \: '{ print $2 }')
 
+# regenerate app.conf
+envsubst < /srv/gislayer/docker/app.conf.tpl > /srv/app.conf
+
 cd /srv/gislayer
+
+export GIS_REST_LAYER_CONF=/srv/app.conf
 
 exec ./hdxrq.py worker \
     --url redis://${HDX_REDIS_ADDR}:${HDX_REDIS_PORT}/${HDX_REDIS_GISDB} \
     --name worker-${WORKER_ID} \
     --worker-ttl ${HDX_REDIS_WORKER_TTL} \
-    geo_q analytics_q
+    ${QUEUES}
