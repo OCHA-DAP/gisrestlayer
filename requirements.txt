@@ -6,6 +6,9 @@ rq-scheduler==0.7.0
 psycopg2==2.8.5
 ckanext-hdx_service_checker==0.0.8
 mixpanel==4.3.1
+
+# Fixing MarkupSafe version because of https://github.com/pallets/markupsafe/issues/284
+markupsafe<2.1.0
 requests
 
 future
