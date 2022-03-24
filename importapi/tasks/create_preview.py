@@ -120,6 +120,9 @@ class CreatePreviewTask(object):
         self._create_download_dir(directory)
         self.download_directory = directory
 
+        logger.info('Starting to download dataset {} resource {} from URL {} to filepath {}'
+                    .format(self.dataset_id, self.resource_id, self.download_url, filepath))
+
         with open(filepath, "wb") as fh:
             try:
                 for chunk in r.iter_content(self.download_chunk_size):
@@ -135,10 +138,12 @@ class CreatePreviewTask(object):
                         logger.error('Timeout while downloading file {}'.format(self.download_url))
                         raise exceptions.TimeoutException('timeout reached')
                     else:
-                        logger.debug("Passed time {} ; Size {}".format(passed_time, size))
-
+                        logger.debug('Passed time {} ; Size {} (for dataset {} and resource {})'.
+                                     format(passed_time, size, self.dataset_id, self.resource_id))
                     fh.write(chunk)
                 file_to_be_pushed = filepath
+                logger.info('Finished downloading dataset {} resource {} to filepath {}'
+                            .format(self.dataset_id, self.resource_id, filepath))
             except Exception as e:
                 logger.error('Exception occured while downloading file {}: {}'.format(filepath, str(e)))
                 raise e
