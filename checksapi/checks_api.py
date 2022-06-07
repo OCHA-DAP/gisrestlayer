@@ -1,3 +1,5 @@
+from urllib.parse import urlparse, urlunparse
+
 import logging
 import flask
 
@@ -43,8 +45,10 @@ def run_checks():
 
 
 def __add_config_for_spatial(config):
-    search_str = '/tables'
+    # search_str = '/tables'
     spatial_url = config.get('GIS_API_PATTERN', '')
-    url_index = spatial_url.find(search_str)
-    spatial_check_url = spatial_url[0:url_index + len(search_str)]
+    url_parts = urlparse(spatial_url)
+    spatial_check_url = urlunparse((url_parts.scheme, url_parts.netloc, '/gis/test', '', '', ''))
+    # url_index = spatial_url.find(search_str)
+    # spatial_check_url = spatial_url[0:url_index + len(search_str)]
     config['CHECKS_SPATIAL_URL'] = spatial_check_url

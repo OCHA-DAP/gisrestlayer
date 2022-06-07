@@ -18,6 +18,6 @@
       "module_name": "ckanext.hdx_service_checker.checks.checks",
       "class_name": "HttpResponseTextCheck",
       "url": "#{CHECKS_SPATIAL_URL}",
-      "included_text": "pre_"
+      "included_text": "Postile is running"
     }
   ]
