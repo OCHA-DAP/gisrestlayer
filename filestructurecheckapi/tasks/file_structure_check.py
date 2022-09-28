@@ -39,10 +39,10 @@ class FSCheckTask(object):
         try:
             # hxl_proxy_source_info_url = self.hxl_proxy_source_info_url
             # TODO uncomment next line and comment text line
-            # response = requests.get(self.hxl_proxy_source_info_url, allow_redirects=True)
-            response = requests.get(
-                'https://data.humdata.org/hxlproxy/api/source-info?url=https://dev.data-humdata-org.ahconu.org/dataset/28bac18a-2e42-444e-995f-a58dcfc310d4/resource/f28afd61-954b-4354-bfa3-140c825a321d/download/test.xlsx',
-                allow_redirects=True)
+            response = requests.get(self.hxl_proxy_source_info_url, allow_redirects=True)
+            # response = requests.get(
+            #     'https://data.humdata.org/hxlproxy/api/source-info?url=https://dev.data-humdata-org.ahconu.org/dataset/28bac18a-2e42-444e-995f-a58dcfc310d4/resource/f28afd61-954b-4354-bfa3-140c825a321d/download/test.xlsx',
+            #     allow_redirects=True)
             logger.info("task done")
             data_dict = json.loads(response.text)
             self.push_information_back_to_ckan(data_dict)
