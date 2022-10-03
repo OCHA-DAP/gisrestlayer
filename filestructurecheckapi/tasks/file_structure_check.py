@@ -39,10 +39,10 @@ class FSCheckTask(object):
         try:
             # hxl_proxy_source_info_url = self.hxl_proxy_source_info_url
             # TODO uncomment next line and comment text line
-            response = requests.get(self.hxl_proxy_source_info_url, allow_redirects=True)
-            # response = requests.get(
-            #     'https://data.humdata.org/hxlproxy/api/source-info?url=https://dev.data-humdata-org.ahconu.org/dataset/28bac18a-2e42-444e-995f-a58dcfc310d4/resource/f28afd61-954b-4354-bfa3-140c825a321d/download/test.xlsx',
-            #     allow_redirects=True)
+            # response = requests.get(self.hxl_proxy_source_info_url, allow_redirects=True)
+            response = requests.get(
+                'https://data.humdata.org/hxlproxy/api/source-info?url=https://dev.data-humdata-org.ahconu.org/dataset/aeb56cc0-d7a6-4518-9621-a562e2e4edbc/resource/ca94cac7-0462-4ea2-b5ba-5510518b0a6c/download/test.xlsx',
+                allow_redirects=True)
             logger.info("task done")
             data_dict = json.loads(response.text)
             self.push_information_back_to_ckan(data_dict)
@@ -76,11 +76,11 @@ class FSCheckTask(object):
                                   headers=headers,
                                   verify=self.verify_ckan_ssl)
                 logger.info(
-                    'Pushed to CKAN shape_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
+                    'Pushed to CKAN fs_check_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
             except Exception as e:
                 logger.error(str(e))
         else:
             logger.error(
-                'Update url or importapi key missing when pushing to CKAN shape info for resource {}'.format(
+                'Update url or importapi key missing when pushing to CKAN fs_check info for resource {}'.format(
                     self.resource_id))
             raise import_api_exceptions.WrongConfigurationException('Either CKAN resource update url or importapi key missing')
