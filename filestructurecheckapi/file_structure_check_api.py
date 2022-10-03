@@ -32,6 +32,7 @@ def file_structure_check(dataset_id, resource_id):
         'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True),
         'hdx_user_agent': app.config.get('HDX_USER_AGENT')
     }
+
     fs_check_q.enqueue_call(func=fs_check.fs_check_task, args=[fs_check_args],
                             timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
     # For debugging purposes comment the line above and uncomment the line below. This will avoid the redis queue
