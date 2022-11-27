@@ -9,6 +9,7 @@ import future.moves.urllib.parse as urlparse
 import requests
 
 import helpers.db_helper as db_helper
+import helpers.helpers as helpers
 import importapi.exceptions.exceptions as exceptions
 import importapi.helpers.problem_solver as problem_solver
 import importapi.helpers.zip as zip_helper
@@ -69,7 +70,7 @@ class CreatePreviewTask(object):
 
         try:
 
-            layer_id = self.generate_layer_id()
+            layer_id = helpers.generate_table_name(self.table_prefix, self.resource_id)
             data_dict['layer_id'] = layer_id
             file_to_be_pushed = self.download_file(layer_id)
             self.push_file_to_postgis(file_to_be_pushed, layer_id)
@@ -316,13 +317,6 @@ class CreatePreviewTask(object):
                 'Update url or importapi key missing when pushing to CKAN shape info for resource {}'.format(
                     self.resource_id))
             raise exceptions.WrongConfigurationException('Either CKAN resource update url or importapi key missing')
-
-    def generate_layer_id(self):
-        # dataset_prefix = ''.join(i if i.isalnum() else '_' for i in dataset_id[0:10])
-
-        main_part = ''.join(i if i.isalnum() else '_' for i in self.resource_id)
-        layer_id = "{}_{}".format(self.table_prefix, main_part)
-        return layer_id
 
     def delete_download_directory(self):
         if self.download_directory and os.path.exists(self.download_directory):
