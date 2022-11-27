@@ -254,8 +254,12 @@ class CreatePreviewTask(object):
 
     def fetch_layer_metadata_from_db(self, resource_id):
         logger.debug('Starting to fetch bounding box and fields for resource {}'.format(resource_id))
-
+        invalid_features_deleted = 0
         with db_helper.DbHelper(self.db_host, self.db_port, self.db_name, self.db_user, self.db_pass) as dbh:
+            invalid_features_deleted = dbh.exec_return_affected_rows(
+                'delete from {} where '
+                'ST_XMax(BOX2D(wkb_geometry)) > 180 or ST_XMin(BOX2D(wkb_geometry)) < -180 or '
+                'ST_YMax(BOX2D(wkb_geometry)) > 90 or ST_YMin(BOX2D(wkb_geometry)) < -90'.format(resource_id), None)
             bounding_box = dbh.fetch_one_item(
                 'select ST_Extent(wkb_geometry)::text as table_extent from {}'.format(resource_id), None)
             logger.info('Fetched bounding box: "{}" for resource {}'.format(bounding_box, resource_id))
@@ -270,10 +274,14 @@ class CreatePreviewTask(object):
         if not layer_fields:
             raise exceptions.FetchLayerMetadataException('Layer fields were not retrieved ')
 
-        return {
+        return_dict = {
             'bounding_box': bounding_box,
             'layer_fields': layer_fields
         }
+        if invalid_features_deleted:
+            return_dict['message'] = 'Import successful. But {} invalid features were deleted' \
+                .format(invalid_features_deleted)
+        return return_dict
 
     # def notify_gis_server(self, resource_id):
     #     gis_api_url = self.gis_api_pattern.format(table_name=resource_id)
