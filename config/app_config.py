@@ -23,6 +23,8 @@ class Config(object):
     # Needed to push the results back to CKAN
     RESOURCE_UPDATE_ACTION = 'hdx_resource_update_metadata'
 
+    HDX_FS_CHECK_RESOURCE_REVISE = 'hdx_fs_check_resource_revise'
+
     # Needed for finding all existing resources
     RESOURCE_ID_LIST_ACTION = 'hdx_resource_id_list'
 

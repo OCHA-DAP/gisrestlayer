@@ -85,9 +85,6 @@ class CreatePreviewTask(object):
             except AttributeError:
                 data_dict['type'] = 'unknown'
 
-
-
-
         self.push_information_back_to_ckan(data_dict)
         self.delete_download_directory()
 
@@ -190,7 +187,8 @@ class CreatePreviewTask(object):
             'NO',
             '-f',
             '"PostgreSQL"',
-            'PG:host={} dbname={} port={} user={} password={}'.format(self.db_host, self.db_name, self.db_port, self.db_user, self.db_pass),
+            'PG:host={} dbname={} port={} user={} password={}'.format(self.db_host, self.db_name, self.db_port,
+                                                                      self.db_user, self.db_pass),
             '{}'.format(filepath),
             '-nln',
             resource_id,
@@ -233,7 +231,6 @@ class CreatePreviewTask(object):
             else:
                 logger.info('Gave up on pushing to POSTGIS {}'.format(filepath))
                 raise exceptions.PushingToPostgisException('Problem during ogr2ogr import to postgis')
-
 
                 # avoid infinte cycles
                 # if not additional_params and 'does not match column type (Polygon)' in output:
