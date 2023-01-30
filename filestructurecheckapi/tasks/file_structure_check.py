@@ -25,7 +25,7 @@ class FSCheckTask(object):
         self.timeout = args.get('timeout_sec')
         self.hxl_proxy_source_info_url = args.get('hxl_proxy_source_info_url')
         # TODO remove testing api_key
-        self.api_key = os.getenv('HDX_GIS_API_KEY')
+        self.api_key = os.getenv('HDX_FSCHECK_API_KEY', os.getenv('HDX_GIS_API_KEY'))
         self.resource_update_api = '{}/{}'.format(args['ckan_api_base_url'], args['resource_update_action'])
 
         self.headers_for_ckan = {
