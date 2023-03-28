@@ -6,8 +6,7 @@ on:
       - dev
       - main
       - prod
-  release:
-    types: [published]
+    tags: [ '*' ]
 
 jobs:
   build:
