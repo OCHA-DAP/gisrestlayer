@@ -35,6 +35,7 @@ def create_app():
     analytics_q = Queue("analytics_q", connection=redis_connection)
     default_scheduler_q = Queue("default_scheduler_q", connection=redis_connection)
     fs_check_q = Queue("fs_check_q", connection=redis_connection)
+    event_q = Queue("event_q", connection=redis_connection)
 
     scheduler = rq_scheduler.Scheduler(queue_name='default_scheduler_q', connection=redis_connection)
 
@@ -47,6 +48,7 @@ def create_app():
     import analyticsapi.analytics_api as analytics_api
     import schedulerapi.scheduler_api as scheduler_api
     import filestructurecheckapi.file_structure_check_api as fs_check_api
+    import eventapi.event_api as event_api
 
     app.register_blueprint(import_api.import_api)
     app.register_blueprint(delete_api.delete_api)
@@ -54,11 +56,13 @@ def create_app():
     app.register_blueprint(analytics_api.analytics_api)
     app.register_blueprint(scheduler_api.scheduler_api)
     app.register_blueprint(fs_check_api.fs_check_api)
+    app.register_blueprint(event_api.event_api)
 
     import_api.import_api_dict['geo_q'] = geo_q
     analytics_api.analytics_api_dict['analytics_q'] = analytics_q
     scheduler_api.scheduler_api_dict['scheduler'] = scheduler
     fs_check_api.fs_check_api_dict['fs_check_q'] = fs_check_q
+    event_api.event_api_dict['event_q'] = event_q
 
     # rq_dashboard.RQDashboard(app, url_prefix='/monitor')
     app.register_blueprint(rq_dashboard.blueprint, url_prefix=app.config.get('MONITOR_URL', '/monitor'))
