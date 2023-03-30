@@ -29,7 +29,7 @@ while True:
             if body_bytes:
                 body = json.loads(body_bytes.decode('utf-8'))
                 # Print the event data
-                print(json.dumps(body, indent=4))
+                print(json.dumps(body, ensure_ascii=False, indent=4))
 
             # Update the last ID to the ID of the last event processed
             last_id = event_id

@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
-from typing import Set, Dict
+from typing import Set, Dict, Callable, Tuple
 
 from eventapi.helpers.stream_redis import stream_events_to_redis
 
@@ -16,6 +16,8 @@ EVENT_TYPE_RESOURCE_DELETED = 'resource-deleted'
 EVENT_TYPE_RESOURCE_CREATED = 'resource-created'
 EVENT_TYPE_RESOURCE_DATA_CHANGED = 'resource-data-changed'
 EVENT_TYPE_RESOURCE_METADATA_CHANGED = 'resource-metadata-changed'
+
+_VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 
 
 @dataclass
@@ -96,6 +98,10 @@ class DatasetChangeDetector(object):
         self.dataset_id = new_dataset_dict['id']
         self.dataset_name = new_dataset_dict['name']
 
+        self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
+            _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
+                           lambda resource_dict: resource_dict['id'])
+
         self.old_resources_map = {r['id']:r for r in old_dataset_dict.get('resources', [])}
         self.new_resources_map = {r['id']:r for r in new_dataset_dict.get('resources', [])}
 
@@ -134,10 +140,37 @@ class DatasetChangeDetector(object):
     def _detect_metadata_changed_dataset(self):
         if self.old_dataset_dict:
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, self.FIELDS)
+            self._detect_groups_change(changes)
+            self._detect_tags_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
                 event_dict = self.create_event_dict(EVENT_TYPE_DATASET_METADATA_CHANGED, changed_fields=list_of_changes)
                 self.append_event(DatasetEvent(**event_dict))
+
+    def _detect_groups_change(self, changes):
+        created_groups, deleted_groups, _, _ = \
+            _compare_lists(self.old_dataset_dict.get('groups', []), self.new_dataset_dict.get('groups', []),
+                           lambda group: group['name'])
+        if created_groups or deleted_groups:
+            changes['groups'] = {
+                'field': 'groups',
+                'added_items': list(created_groups),
+                'removed_items': list(deleted_groups),
+            }
+
+    def _detect_tags_change(self, changes):
+        created_tags, deleted_tags, _, _ = \
+            _compare_lists(
+                (tag for tag in self.old_dataset_dict.get('tags', []) if tag.get('vocabulary_id') == _VOCABULARY_ID),
+                (tag for tag in self.new_dataset_dict.get('tags', []) if tag.get('vocabulary_id') == _VOCABULARY_ID),
+                lambda tag: tag['name']
+            )
+        if created_tags or deleted_tags:
+            changes['tags'] = {
+                'field': 'tags',
+                'added_items': list(created_tags),
+                'removed_items': list(deleted_tags),
+            }
 
     def _detect_deleted_resources(self):
         for resource_id in self.deleted_resource_ids:
@@ -206,6 +239,29 @@ class ResourceChangeDetector(object):
             list_of_changes = list(changes.values())
             event_dict = self.create_event_dict(EVENT_TYPE_RESOURCE_METADATA_CHANGED, changed_fields=list_of_changes)
             self.append_event(ResourceEvent(**event_dict))
+
+
+def _compare_lists(old_list: [dict], new_list: [dict], item_id_extractor: Callable[[dict], str]) -> \
+        Tuple[ Set[str], Set[str], Dict[str, Dict], Dict[str, Dict]]:
+    '''
+    Compares two lists of dictionaries and returns the IDs of created and deleted items,
+    and dictionaries of old and new items.
+
+    :param old_list: List of old dictionaries to compare.
+    :param new_list: List of new dictionaries to compare.
+    :param item_id_extractor: A callable that takes a dictionary item and returns a unique ID string for that item.
+    :returns: A tuple of four elements containing the following:
+
+             * `created_item_ids`: A set of IDs of new items.
+             * `deleted_item_ids`: A set of IDs of old items that are not in the new list.
+             * `old_items_map`: A dictionary mapping item IDs to items in the old list.
+             * `new_items_map`: A dictionary mapping item IDs to items in the new list.
+    '''
+    old_items_map = {item_id_extractor(item): item for item in old_list}
+    new_items_map = {item_id_extractor(item): item for item in new_list}
+    deleted_item_ids = old_items_map.keys() - new_items_map.keys()
+    created_item_ids = new_items_map.keys() - old_items_map.keys()
+    return created_item_ids, deleted_item_ids, old_items_map, new_items_map
 
 
 def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) -> Dict[str, dict]:
