@@ -17,6 +17,11 @@ EVENT_TYPE_RESOURCE_CREATED = 'resource-created'
 EVENT_TYPE_RESOURCE_DATA_CHANGED = 'resource-data-changed'
 EVENT_TYPE_RESOURCE_METADATA_CHANGED = 'resource-metadata-changed'
 
+# Fields for file structure_change: num_sheets, num_rows, num_cols, has_merged_cells, header, hxl_header
+EVENT_TYPE_SPREADSHEET_SHEET_CREATED = 'spreadsheet-sheet-created'
+EVENT_TYPE_SPREADSHEET_SHEET_DELETED = 'spreadsheet-sheet-deleted'
+EVENT_TYPE_SPREADSHEET_SHEET_CHANGED = 'spreadsheet-sheet-changed'
+
 _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 
 
@@ -43,6 +48,11 @@ class ResourceEvent(Event):
     changed_fields: [dict]
     resource_name: str
     resource_id: str
+
+
+@dataclass
+class FileStructureEvent(ResourceEvent):
+    sheet_id: str
 
 
 def detect_changes(task_arguments):
@@ -100,13 +110,11 @@ class DatasetChangeDetector(object):
 
         self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
             _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
-                           lambda resource_dict: resource_dict['id'])
+                           lambda idx, resource_dict: resource_dict['id'])
 
         self.old_resources_map = {r['id']:r for r in old_dataset_dict.get('resources', [])}
         self.new_resources_map = {r['id']:r for r in new_dataset_dict.get('resources', [])}
 
-        self.deleted_resource_ids = self.old_resources_map.keys() - self.new_resources_map.keys()
-        self.created_resource_ids = self.new_resources_map.keys() - self.old_resources_map.keys()
         self.common_resource_ids = set(self.old_resources_map.keys()).intersection(self.new_resources_map.keys())
 
     def detect_changes(self):
@@ -150,7 +158,7 @@ class DatasetChangeDetector(object):
     def _detect_groups_change(self, changes):
         created_groups, deleted_groups, _, _ = \
             _compare_lists(self.old_dataset_dict.get('groups', []), self.new_dataset_dict.get('groups', []),
-                           lambda group: group['name'])
+                           lambda idx, group: group['name'])
         if created_groups or deleted_groups:
             changes['groups'] = {
                 'field': 'groups',
@@ -163,7 +171,7 @@ class DatasetChangeDetector(object):
             _compare_lists(
                 (tag for tag in self.old_dataset_dict.get('tags', []) if tag.get('vocabulary_id') == _VOCABULARY_ID),
                 (tag for tag in self.new_dataset_dict.get('tags', []) if tag.get('vocabulary_id') == _VOCABULARY_ID),
-                lambda tag: tag['name']
+                lambda idx, tag: tag['name']
             )
         if created_tags or deleted_tags:
             changes['tags'] = {
@@ -213,6 +221,10 @@ class ResourceChangeDetector(object):
         self.new_resource = new_resource
         self.resource_id = new_resource['id']
         self.resource_name = new_resource['name']
+        self.created_sheets = None
+        self.deleted_sheets = None
+        self.new_sheets_map = None
+        self.old_sheets_map = None
 
     def create_event_dict(self, event_name, **kwargs) -> dict:
         event_dict = self.dataset_detector.create_event_dict(event_name, **kwargs)
@@ -226,6 +238,7 @@ class ResourceChangeDetector(object):
     def detect_changes(self):
         self._detect_data_modified()
         self._detect_metadata_changed()
+        self._detect_file_structure_change()
 
     def _detect_data_modified(self):
         key = 'last_modified'
@@ -240,8 +253,84 @@ class ResourceChangeDetector(object):
             event_dict = self.create_event_dict(EVENT_TYPE_RESOURCE_METADATA_CHANGED, changed_fields=list_of_changes)
             self.append_event(ResourceEvent(**event_dict))
 
+    def _detect_file_structure_change(self):
+        last_item_sheets = None
+        prev_item_sheets = None
+        new_fs_history_str: str = self.new_resource.get('fs_check_info')
+        old_fs_history_str: str = self.old_resource.get('fs_check_info')
+        if new_fs_history_str and new_fs_history_str != old_fs_history_str:
+            try:
+                fs_history = json.loads(new_fs_history_str)
+                history_items = [item for item in fs_history if item.get('state') == 'success']
+                if len(history_items) >= 2:
+                    last_item = history_items[-1]
+                    prev_item = history_items[-2]
+                    if last_item:
+                        last_item_sheets = last_item.get('hxl_proxy_response', {}).get('sheets') or []
+                    if prev_item:
+                        prev_item_sheets = prev_item.get('hxl_proxy_response', {}).get('sheets') or []
+            except Exception as e:
+                log.error(str(e))
 
-def _compare_lists(old_list: [dict], new_list: [dict], item_id_extractor: Callable[[dict], str]) -> \
+        if last_item_sheets and prev_item_sheets:
+            self.created_sheets, self.deleted_sheets, self.new_sheets_map, self.old_sheets_map = \
+                _compare_lists(prev_item_sheets, last_item_sheets,
+                               lambda i, sheet: sheet.get('name') or str(i))
+
+            self._detect_created_sheets()
+            self._detect_deleted_sheets()
+            self._detect_changed_sheets()
+
+    def _detect_created_sheets(self):
+        for sheet_id in self.created_sheets:
+            event_dict = self.create_event_dict(EVENT_TYPE_SPREADSHEET_SHEET_CREATED,
+                                                sheet_id=sheet_id, changed_fields=None)
+            self.append_event(FileStructureEvent(**event_dict))
+
+    def _detect_deleted_sheets(self):
+        for sheet_id in self.deleted_sheets:
+            event_dict = self.create_event_dict(EVENT_TYPE_SPREADSHEET_SHEET_DELETED,
+                                                sheet_id=sheet_id, changed_fields=None)
+            self.append_event(FileStructureEvent(**event_dict))
+
+    def _detect_changed_sheets(self):
+        common_sheet_ids = set(self.old_sheets_map.keys()).intersection(self.new_sheets_map.keys())
+        for sheet_id in common_sheet_ids:
+            old_sheet = self.old_sheets_map[sheet_id]
+            new_sheet = self.new_sheets_map[sheet_id]
+            SpreadsheetChangeDetector(self, sheet_id, old_sheet, new_sheet).detect_changes()
+
+
+class SpreadsheetChangeDetector(object):
+    FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name'}
+
+    def __init__(self, resource_detector: ResourceChangeDetector, sheet_id:str, old_sheet: dict, new_sheet:dict) -> None:
+        super().__init__()
+        self.sheet_id = sheet_id
+        self.old_sheet = old_sheet
+        self.new_sheet = new_sheet
+        self.resource_detector = resource_detector
+
+    def create_event_dict(self, **kwargs) -> dict:
+        event_dict = self.resource_detector.create_event_dict(EVENT_TYPE_SPREADSHEET_SHEET_CHANGED, **kwargs)
+        event_dict['sheet_id'] = self.sheet_id
+        return event_dict
+
+    def append_event(self, event: Event):
+        self.resource_detector.append_event(event)
+
+    def detect_changes(self):
+        self._detect_internal_sheet_changes()
+
+    def _detect_internal_sheet_changes(self):
+        changes = _find_dict_changes(self.old_sheet, self.new_sheet, self.FIELDS)
+        if changes:
+            list_of_changes = list(changes.values())
+            event_dict = self.create_event_dict(changed_fields=list_of_changes)
+            self.append_event(FileStructureEvent(**event_dict))
+
+
+def _compare_lists(old_list: [dict], new_list: [dict], item_id_extractor: Callable[[int, dict], str]) -> \
         Tuple[ Set[str], Set[str], Dict[str, Dict], Dict[str, Dict]]:
     '''
     Compares two lists of dictionaries and returns the IDs of created and deleted items,
@@ -254,14 +343,14 @@ def _compare_lists(old_list: [dict], new_list: [dict], item_id_extractor: Callab
 
              * `created_item_ids`: A set of IDs of new items.
              * `deleted_item_ids`: A set of IDs of old items that are not in the new list.
-             * `old_items_map`: A dictionary mapping item IDs to items in the old list.
              * `new_items_map`: A dictionary mapping item IDs to items in the new list.
+             * `old_items_map`: A dictionary mapping item IDs to items in the old list.
     '''
-    old_items_map = {item_id_extractor(item): item for item in old_list}
-    new_items_map = {item_id_extractor(item): item for item in new_list}
+    old_items_map = {item_id_extractor(index, item): item for index, item in enumerate(old_list)}
+    new_items_map = {item_id_extractor(index, item): item for index, item in enumerate(new_list)}
     deleted_item_ids = old_items_map.keys() - new_items_map.keys()
     created_item_ids = new_items_map.keys() - old_items_map.keys()
-    return created_item_ids, deleted_item_ids, old_items_map, new_items_map
+    return created_item_ids, deleted_item_ids, new_items_map, old_items_map
 
 
 def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) -> Dict[str, dict]:

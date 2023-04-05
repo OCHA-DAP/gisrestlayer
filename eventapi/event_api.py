@@ -38,5 +38,6 @@ def create_change_events():
     except Exception as e:
         result['state'] = 'failure'
         result['message'] = str(e)
+        logger.error('There was a problem processing the request: {}'.format(str(e)))
 
     return jsonify(result)
