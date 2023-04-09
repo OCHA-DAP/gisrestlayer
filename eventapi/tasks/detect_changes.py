@@ -214,7 +214,7 @@ class ResourceChangeDetector(object):
 
     FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 
-    def __init__(self, dataset_detector:DatasetChangeDetector, old_resource: dict, new_resource:dict) -> None:
+    def __init__(self, dataset_detector: DatasetChangeDetector, old_resource: dict, new_resource:dict) -> None:
         super().__init__()
         self.dataset_detector = dataset_detector
         self.old_resource = old_resource
@@ -225,6 +225,8 @@ class ResourceChangeDetector(object):
         self.deleted_sheets = None
         self.new_sheets_map = None
         self.old_sheets_map = None
+        self.new_fs_item = None
+        self.old_fs_item = None
 
     def create_event_dict(self, event_name, **kwargs) -> dict:
         event_dict = self.dataset_detector.create_event_dict(event_name, **kwargs)
@@ -254,8 +256,6 @@ class ResourceChangeDetector(object):
             self.append_event(ResourceEvent(**event_dict))
 
     def _detect_file_structure_change(self):
-        last_item_sheets = None
-        prev_item_sheets = None
         new_fs_history_str: str = self.new_resource.get('fs_check_info')
         old_fs_history_str: str = self.old_resource.get('fs_check_info')
         if new_fs_history_str and new_fs_history_str != old_fs_history_str:
@@ -263,15 +263,20 @@ class ResourceChangeDetector(object):
                 fs_history = json.loads(new_fs_history_str)
                 history_items = [item for item in fs_history if item.get('state') == 'success']
                 if len(history_items) >= 2:
-                    last_item = history_items[-1]
-                    prev_item = history_items[-2]
-                    if last_item:
-                        last_item_sheets = last_item.get('hxl_proxy_response', {}).get('sheets') or []
-                    if prev_item:
-                        prev_item_sheets = prev_item.get('hxl_proxy_response', {}).get('sheets') or []
+                    self.new_fs_item = history_items[-1]
+                    self.old_fs_item = history_items[-2]
+
+                    self.detect_fs_item_changes()
             except Exception as e:
                 log.error(str(e))
 
+    def detect_fs_item_changes(self):
+        last_item_sheets = None
+        prev_item_sheets = None
+        if self.new_fs_item:
+            last_item_sheets = self.new_fs_item.get('hxl_proxy_response', {}).get('sheets') or []
+        if self.old_fs_item:
+            prev_item_sheets = self.old_fs_item.get('hxl_proxy_response', {}).get('sheets') or []
         if last_item_sheets and prev_item_sheets:
             self.created_sheets, self.deleted_sheets, self.new_sheets_map, self.old_sheets_map = \
                 _compare_lists(prev_item_sheets, last_item_sheets,
