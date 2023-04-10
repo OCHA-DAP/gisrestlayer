@@ -62,7 +62,7 @@ class FSCheckTask(object):
                     'key': 'fs_check_info',
                     'value': {
                         "state": "success",
-                        "message": "Hxl Proxy data received successfully",
+                        "message": "File structure check completed",
                         "timestamp": datetime.datetime.now().isoformat(),
                         "hxl_proxy_response": fs_check_info_dict
                     }
