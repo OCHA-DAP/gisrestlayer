@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
-from typing import Set, Dict, Callable, Tuple
+from typing import Set, Dict, Callable, Tuple, List
 
 from eventapi.helpers.stream_redis import stream_events_to_redis
 
@@ -55,7 +55,7 @@ class FileStructureEvent(ResourceEvent):
     sheet_id: str
 
 
-def detect_changes(task_arguments):
+def detect_changes(task_arguments) -> List[Event]:
     '''
     :param task_arguments: should contain at least: username, old_dataset_dict, new_dataset_dict,
      Also mixpanel_token depends on the flag send_mixpanel
@@ -78,6 +78,8 @@ def detect_changes(task_arguments):
             # stream_events_to_eventbridge(event_list)
         except Exception as e:
             log.error(str(e))
+
+    return detector.change_events
 #     post_changes(event_list)
 #
 #

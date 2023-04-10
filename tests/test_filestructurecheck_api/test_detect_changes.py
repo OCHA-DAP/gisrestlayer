@@ -56,7 +56,7 @@ old_item = {
 }
 
 
-def test_detect_changes():
+def test_detect_file_structure_changes():
     change_events = detect_file_structure_changes(new_item, old_item)
     sheet_created_events = [e for e in change_events if e.event_type == EVENT_TYPE_SPREADSHEET_SHEET_CREATED]
     assert len(sheet_created_events) == 1, 'one new sheet should have been created'
