@@ -3,7 +3,7 @@ from filestructurecheckapi.helpers.detect_changes import detect_file_structure_c
 
 new_item = {
     "state": "success",
-    "message": "Hxl Proxy data received successfully",
+    "message": "File structure check completed",
     "timestamp": "2023-04-07T04:00:48.495831",
     "hxl_proxy_response": {
         "url_or_filename": "https://test.domain.test/download/some_test.xlsx",
@@ -35,7 +35,7 @@ new_item = {
 
 old_item = {
     "state": "success",
-    "message": "Hxl Proxy data received successfully",
+    "message": "File structure check completed",
     "timestamp": "2023-04-07T04:00:48.495831",
     "hxl_proxy_response": {
         "url_or_filename": "https://test.domain.test/download/some_test.xlsx",
