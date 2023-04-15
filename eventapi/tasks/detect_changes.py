@@ -309,7 +309,7 @@ class ResourceChangeDetector(object):
 
 
 class SpreadsheetChangeDetector(object):
-    FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name'}
+    FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
     def __init__(self, resource_detector: ResourceChangeDetector, sheet_id:str, old_sheet: dict, new_sheet:dict) -> None:
         super().__init__()
