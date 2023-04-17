@@ -15,6 +15,7 @@ RUN mkdir -p /etc/services.d/gislayer && mv docker/run_gislayer /etc/services.d/
         gettext && \
     apk add --virtual .build-deps \
         build-base \
+        git \
         python3-dev \
         postgresql-dev && \
     pip3 install -r requirements.txt && \

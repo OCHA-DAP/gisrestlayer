@@ -12,3 +12,6 @@ markupsafe<2.1.0
 requests
 
 future
+
+git+https://github.com/OCHA-DAP/hdx-redis-lib.git@0.1.0
+
