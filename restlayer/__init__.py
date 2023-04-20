@@ -64,8 +64,7 @@ def create_app():
     fs_check_api.fs_check_api_dict['fs_check_q'] = fs_check_q
     event_api.event_api_dict['event_q'] = event_q
 
-    # rq_dashboard.RQDashboard(app, url_prefix='/monitor')
-    app.register_blueprint(rq_dashboard.blueprint, url_prefix=app.config.get('MONITOR_URL', '/monitor'))
+    __register_monitor(app)
 
     @app.route('/version', methods=['GET'])
     @app.route('/about', methods=['GET'])
@@ -88,3 +87,10 @@ def create_app():
         return response
 
     return app
+
+
+def __register_monitor(app):
+    app.config['RQ_DASHBOARD_REDIS_HOST'] = app.config['REDIS_HOST']
+    app.config['RQ_DASHBOARD_REDIS_PORT'] = app.config['REDIS_PORT']
+    app.config['RQ_DASHBOARD_REDIS_DB'] = app.config['REDIS_DB']
+    app.register_blueprint(rq_dashboard.blueprint, url_prefix=app.config.get('MONITOR_URL', '/monitor'))
