@@ -4,6 +4,7 @@ import psycopg2.extras
 
 logger = logging.getLogger(__name__)
 
+
 class DbHelper(object):
 
     def __init__(self, db_host, db_port, db_name, db_user, db_pass):
@@ -45,6 +46,14 @@ class DbHelper(object):
     def exec_with_no_return(self, query, params):
         with self.con.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
             cursor.execute(query, params)
+
+    def exec_return_affected_rows(self, query, params):
+        result = 0
+        with self.con.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute(query, params)
+            result = cursor.rowcount
+
+        return result
 
     def close(self, commit=False):
         if commit:

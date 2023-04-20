@@ -35,14 +35,14 @@ class Config(object):
 
     # REDIS SPECIFIC CONFIGURATION
     #: If set the REDIS_URL takes precedence over REDIS_HOST, REDIS_PORT, etc
-    REDIS_URL = None
+    # REDIS_URL = None
 
     REDIS_HOST = 'redis'
     REDIS_PORT = 6379
-    REDIS_PASSWORD = None
+    # REDIS_PASSWORD = None
     REDIS_DB = 1
 
-    RQ_POLL_INTERVAL = 2500  #: Web interface poll period for updates in ms
+    RQ_DASHBOARD_POLL_INTERVAL = 2500  #: Web interface poll period for updates in ms
 
     # How long can a worker work on a task
     RQ_WORKER_TIMEOUT = 300

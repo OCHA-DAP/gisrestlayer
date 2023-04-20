@@ -1,7 +1,8 @@
 import logging
 import flask
 import deleteapi.layers_cleaner as layers_cleaner
-
+import helpers.db_helper as db_helper
+from helpers.helpers import generate_table_name, get_db_params_from_app_config
 
 g = flask.g
 request = flask.request
@@ -20,12 +21,13 @@ logger.info('delete_api blueprint loaded')
 @delete_api.route('/api/delete-layers/dry-run/<string:dry_run>', methods=['GET'])
 def delete_layers(dry_run):
     try:
+        db_host, db_name, db_pass, db_port, db_user, table_name_prefix = get_db_params_from_app_config(app.config)
         db_params = {
-            'db_host': app.config.get('DB_HOST', 'db'),
-            'db_name': app.config.get('DB_NAME', 'gis'),
-            'db_user': app.config.get('DB_USER', 'ckan'),
-            'db_pass': app.config.get('DB_PASS', 'abc'),
-            'db_port': app.config.get('DB_PORT', 5432),
+            'db_host': db_host,
+            'db_name': db_name,
+            'db_user': db_user,
+            'db_pass': db_pass,
+            'db_port': db_port,
             'table_name_prefix': app.config.get('TABLE_NAME_PREFIX', 'pre')
         }
         ckan_params = {
@@ -51,3 +53,32 @@ def delete_layers(dry_run):
     logger.debug('Result is: {}'.format(str(result)))
     return json_result
 
+
+@delete_api.route('/api/delete-one-layer/<string:resource_id>', methods=['POST'])
+def delete_layer(resource_id):
+    status_code = 200
+    result = {
+        'state': 'started',
+        'message': 'None',
+        'error_type': 'None',
+        'error_class': 'None'
+    }
+    try:
+        db_host, db_name, db_pass, db_port, db_user, table_name_prefix = get_db_params_from_app_config(app.config)
+        with db_helper.DbHelper(db_host, db_port, db_name, db_user, db_pass) as dbh:
+            table_name = generate_table_name(table_name_prefix, resource_id)
+            sql = 'DROP TABLE "{}";'.format(table_name)
+            logger.info('Deleting layer {}'.format(table_name))
+            dbh.exec_with_no_return(sql, None)
+
+    except Exception as e:
+        status_code = 500
+        result['state'] = 'failure'
+        result['message'] = str(e)
+        result['error_class'] = type(e).__name__
+        try:
+            result['type'] = e.type
+        except AttributeError:
+            result['type'] = 'unknown'
+
+    return jsonify(result), status_code

@@ -18,19 +18,21 @@ logger.info('file_structure_check_api blueprint loaded')
 
 
 @fs_check_api.route('/api/file-structure-check/dataset/<string:dataset_id>/resource/<string:resource_id>',
-                    methods=['GET'])
+                    methods=['POST'])
 def file_structure_check(dataset_id, resource_id):
+    call_arguments = request.get_json()
     fs_check_q = fs_check_api_dict.get('fs_check_q')
     fs_check_args = {
         'dataset_id': dataset_id,
         'resource_id': resource_id,
         # 'url_type': request.args.get('url_type'),
         # 'url': request.args.get('url'),
-        'hxl_proxy_source_info_url': request.args.get('hxl_proxy_source_info_url'),
+        'hxl_proxy_source_info_url': call_arguments.get('hxl_proxy_source_info_url'),
         'ckan_api_base_url': app.config.get('CKAN_API_BASE_URL'),
         'resource_update_action': app.config.get('HDX_FS_CHECK_RESOURCE_REVISE'),
         'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True),
-        'hdx_user_agent': app.config.get('HDX_USER_AGENT')
+        'hdx_user_agent': app.config.get('HDX_USER_AGENT'),
+        'fs_check_info': call_arguments.get('fs_check_info')
     }
 
     fs_check_q.enqueue_call(func=fs_check.fs_check_task, args=[fs_check_args],
