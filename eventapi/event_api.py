@@ -26,7 +26,7 @@ def create_change_events():
         'state': 'success'
     }
     try:
-        if app.config.get('TABLE_NAME_PREFIX', False) is True:
+        if app.config.get('EVENTS_API_ENABLED', False) is True:
             task_arguments = request.get_json()
 
             event_q = event_api_dict.get('event_q')
