@@ -26,14 +26,15 @@ def create_change_events():
         'state': 'success'
     }
     try:
-        task_arguments = request.get_json()
+        if app.config.get('TABLE_NAME_PREFIX', False) is True:
+            task_arguments = request.get_json()
 
-        event_q = event_api_dict.get('event_q')
+            event_q = event_api_dict.get('event_q')
 
-        event_q.enqueue_call(func=detect_changes, args=[task_arguments],
-                                 timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
-        # For debugging purposes comment the line above and uncomment the line below. This will avoid the redis queue
-        # detect_changes(task_arguments)
+            event_q.enqueue_call(func=detect_changes, args=[task_arguments],
+                                     timeout=app.config.get('RQ_WORKER_TIMEOUT', 180))
+            # For debugging purposes comment the line above and uncomment the line below. This will avoid the redis queue
+            # detect_changes(task_arguments)
 
     except Exception as e:
         result['state'] = 'failure'
