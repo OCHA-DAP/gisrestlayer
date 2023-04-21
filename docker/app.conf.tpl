@@ -36,3 +36,6 @@ DB_PORT = '${DB_PORT}'
 DB_NAME = '${DB_NAME}'
 DB_USER = '${DB_USER}'
 DB_PASS = '${DB_PASS}'
+
+# True if events api should be enabled, otherwise False
+EVENTS_API_ENABLED = ${EVENTS_API_ENABLED}
