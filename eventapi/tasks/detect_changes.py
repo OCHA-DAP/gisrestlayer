@@ -1,4 +1,3 @@
-import copy
 import json
 import logging
 from dataclasses import dataclass, asdict
@@ -394,14 +393,12 @@ def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) 
 
 
 def _filter_dict_certain_keys(source_dict: dict, parent_key: str, keys_to_keep: dict):
-    dict_copy = copy.deepcopy(source_dict)  # no side-effects
-
-    for key, value in source_dict.items():
+    for key, value in list(source_dict.items()):
         if key not in keys_to_keep[parent_key]:
-            dict_copy.pop(key)
+            source_dict.pop(key)
         elif isinstance(value, dict):
-            dict_copy[key] = _filter_dict_certain_keys(value, key, keys_to_keep)
+            source_dict[key] = _filter_dict_certain_keys(value, key, keys_to_keep)
         elif isinstance(value, list):
-            dict_copy[key] = [_filter_dict_certain_keys(el, key, keys_to_keep) if isinstance(el, dict) else el for el in
-                              value]
-    return dict_copy
+            source_dict[key] = [_filter_dict_certain_keys(el, key, keys_to_keep) if isinstance(el, dict) else el for el
+                                in value]
+    return source_dict
