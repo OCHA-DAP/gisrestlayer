@@ -38,14 +38,12 @@ class Event(object):
 class DatasetEvent(Event):
     dataset_name: str
     dataset_id: str
+    dataset_obj: [dict]
     changed_fields: [dict]
 
 
 @dataclass
-class ResourceEvent(Event):
-    dataset_name: str
-    dataset_id: str
-    changed_fields: [dict]
+class ResourceEvent(DatasetEvent):
     resource_name: str
     resource_id: str
 
@@ -98,6 +96,22 @@ class DatasetChangeDetector(object):
         'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other',
         'methodology', 'methodology_other', 'caveats', 'archived', 'is_requestdata_type',
     }
+    DATASET_OBJ_FIELDS = {
+        '': ['archived', 'creator_user_id', 'data_update_frequency', 'dataset_date', 'dataset_preview',
+             'dataset_source', 'has_geodata', 'has_quickcharts', 'has_showcases', 'id', 'is_requestdata_type',
+             'last_modified', 'license_id', 'license_title', 'license_url', 'maintainer', 'maintainer_email',
+             'metadata_created', 'metadata_modified', 'methodology', 'name', 'notes', 'num_resources', 'num_tags',
+             'owner_org', 'package_creator', 'pageviews_last_14_days', 'private', 'qa_completed', 'state',
+             'subnational', 'title', 'total_res_downloads', 'type', 'is_fresh', 'update_status', 'organization',
+             'groups', 'resources', 'tags'],
+        'organization': ['id', 'name', 'title', 'type', 'description', 'image_url', 'created', 'is_organization',
+                         'approval_status', 'state'],
+        'groups': ['description', 'display_name', 'id', 'image_display_url', 'name', 'title'],
+        'resources': ['created', 'datastore_active', 'description', 'download_url', 'format', 'hdx_rel_url', 'id',
+                      'last_modified', 'metadata_modified', 'microdata', 'mimetype', 'mimetype_inner', 'name',
+                      'package_id', 'pii', 'position', 'resource_type', 'size', 'state', 'url', 'url_type'],
+        'tags': ['display_name', 'id', 'name', 'state', 'vocabulary_id'],
+    }
 
     def __init__(self, username: str, old_dataset_dict: dict, new_dataset_dict: dict) -> None:
         super().__init__()
@@ -109,6 +123,7 @@ class DatasetChangeDetector(object):
 
         self.dataset_id = new_dataset_dict['id']
         self.dataset_name = new_dataset_dict['name']
+        self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict, '', self.DATASET_OBJ_FIELDS)
 
         self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
             _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
@@ -134,8 +149,9 @@ class DatasetChangeDetector(object):
             'initiator_user_name': self.username,
             'dataset_name': self.dataset_name,
             'dataset_id': self.dataset_id,
+            'dataset_obj': self.dataset_obj,
         }
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             event_dict[k] = v
         return event_dict
 
@@ -374,3 +390,15 @@ def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) 
                 'old_value': old_value,
             }
     return changes
+
+
+def _filter_dict_certain_keys(source_dict: dict, parent_key: str, keys_to_keep: dict):
+    for key, value in list(source_dict.items()):
+        if key not in keys_to_keep[parent_key]:
+            source_dict.pop(key)
+        elif isinstance(value, dict):
+            source_dict[key] = _filter_dict_certain_keys(value, key, keys_to_keep)
+        elif isinstance(value, list):
+            source_dict[key] = [_filter_dict_certain_keys(el, key, keys_to_keep) if isinstance(el, dict) else el for el
+                                in value]
+    return source_dict
