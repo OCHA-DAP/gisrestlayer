@@ -2,6 +2,17 @@ from tests.test_event_api.sample_data import NEW_DATASET_DICT, OLD_DATASET_DICT
 from eventapi.tasks.detect_changes import DatasetChangeDetector, EVENT_TYPE_DATASET_METADATA_CHANGED
 
 
+def test_dataset_changed_data_during_init():
+    new_dataset_dict = NEW_DATASET_DICT
+    old_dataset_dict = OLD_DATASET_DICT
+
+    detector = DatasetChangeDetector(new_dataset_dict=new_dataset_dict.copy(), old_dataset_dict=old_dataset_dict.copy(),
+                                     username='test_user')
+
+    assert detector.new_dataset_dict == new_dataset_dict, 'new dataset dict should be the same'
+    assert detector.old_dataset_dict == old_dataset_dict, 'old dataset dict should be the same'
+
+
 def test_detect_dataset_changes():
     change_events = _detect_dataset_changes(NEW_DATASET_DICT, OLD_DATASET_DICT)
 
