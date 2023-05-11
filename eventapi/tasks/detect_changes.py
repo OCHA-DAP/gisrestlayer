@@ -123,7 +123,7 @@ class DatasetChangeDetector(object):
 
         self.dataset_id = new_dataset_dict['id']
         self.dataset_name = new_dataset_dict['name']
-        self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict, '', self.DATASET_OBJ_FIELDS)
+        self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
 
         self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
             _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
