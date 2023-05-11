@@ -11,6 +11,7 @@
 
 NEW_DATASET_DICT = {
     "archived": False,
+    "caveats": 'comment',
     "creator_user_id": "7c92b9f6-f898-4302-9f73-61ec8eab1340",
     "data_update_frequency": "60",
     "dataset_date": "[2022-03-03T00:00:00 TO *]",
@@ -155,6 +156,7 @@ NEW_DATASET_DICT = {
 
 OLD_DATASET_DICT = {
     "archived": False,
+    "caveats": 'comment',
     "creator_user_id": "7c92b9f6-f898-4302-9f73-61ec8eab1340",
     "data_update_frequency": "30",
     "dataset_date": "[2022-03-03T00:00:00 TO *]",
