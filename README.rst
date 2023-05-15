@@ -86,8 +86,14 @@ The code below needs to be run in the folder where the python code is
 
 Please note that *rqworker* was replaced by *./hdxrq.py worker*. More info can be found `here <LOGGING.rst>`_
 
-Scheduling feature
-++++++++++++++++++
+Generating events for the event bus
++++++++++++++++++++++++++++++++++++
+
+The "events" API is used for detecting changes in datasets and transforming them in events which are pushed to the event bus.
+Read more about this `here <eventapi/README.rst>`_
+
+Scheduling feature (deprecated)
++++++++++++++++++++++++++++++++
 
 The HDX Job Processor has support for scheduling (though it's unused at the moment). To read more about it go
 `here <schedulerapi/docs/README.rst>`_
