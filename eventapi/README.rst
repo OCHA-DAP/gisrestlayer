@@ -48,7 +48,15 @@ We're using Redis Streams as our event bus. Once the events have been generated 
 
 The interaction with redis streams is abstracted away by using the `HDX REDIS LIB <https://github.com/OCHA-DAP/hdx-redis-lib>`_ library
 
-[TODO]: For now the worker connects to the "redis queue" redis instance which is not ideal. It also uses DB 7. This needs to become configurable via ENV VARS.
+Configuration
++++++++++++++
+The worker will try to connect to redis (streams) by using the following *ENV VARS*:
+
+*  :code:`REDIS_STREAM_HOST` - default *'redis'*
+*  :code:`REDIS_STREAM_PORT` - default *6379
+*  :code:`REDIS_STREAM_DB` - default *7*
+        redis_stream_port = os.getenv('REDIS_STREAM_PORT', 6379)
+        redis_stream_db = os.getenv('REDIS_STREAM_DB', 7)
 
 Implementation notes
 +++++++++++++++++++++++++++++++++++++
