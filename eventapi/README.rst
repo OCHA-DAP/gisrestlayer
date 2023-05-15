@@ -55,8 +55,7 @@ The worker will try to connect to redis (streams) by using the following *ENV VA
 *  :code:`REDIS_STREAM_HOST` - default *'redis'*
 *  :code:`REDIS_STREAM_PORT` - default *6379
 *  :code:`REDIS_STREAM_DB` - default *7*
-        redis_stream_port = os.getenv('REDIS_STREAM_PORT', 6379)
-        redis_stream_db = os.getenv('REDIS_STREAM_DB', 7)
+
 
 Implementation notes
 +++++++++++++++++++++++++++++++++++++
