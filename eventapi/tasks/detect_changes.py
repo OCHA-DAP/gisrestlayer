@@ -24,6 +24,12 @@ EVENT_TYPE_SPREADSHEET_SHEET_CHANGED = 'spreadsheet-sheet-changed'
 
 _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 
+DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
+                  'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other', 'methodology',
+                  'methodology_other', 'caveats', 'archived', 'is_requestdata_type'}
+RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
+SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
+
 
 @dataclass
 class Event(object):
@@ -91,11 +97,6 @@ def detect_changes(task_arguments) -> List[Event]:
 
 class DatasetChangeDetector(object):
 
-    FIELDS = {
-        'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
-        'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other',
-        'methodology', 'methodology_other', 'caveats', 'archived', 'is_requestdata_type',
-    }
     DATASET_OBJ_FIELDS = {
         '': ['archived', 'creator_user_id', 'data_update_frequency', 'dataset_date', 'dataset_preview',
              'dataset_source', 'has_geodata', 'has_quickcharts', 'has_showcases', 'id', 'is_requestdata_type',
@@ -160,12 +161,15 @@ class DatasetChangeDetector(object):
 
     def _detect_created_dataset(self):
         if not self.old_dataset_dict:
-            event_dict = self.create_event_dict(EVENT_TYPE_DATASET_CREATED, changed_fields=None)
-            self.append_event(DatasetEvent(**event_dict))
+            changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
+            if changes:
+                list_of_changes = list(changes.values())
+                event_dict = self.create_event_dict(EVENT_TYPE_DATASET_CREATED, changed_fields=list_of_changes)
+                self.append_event(DatasetEvent(**event_dict))
 
     def _detect_metadata_changed_dataset(self):
         if self.old_dataset_dict:
-            changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, self.FIELDS)
+            changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
             self._detect_groups_change(changes)
             self._detect_tags_change(changes)
             if changes:
@@ -200,26 +204,36 @@ class DatasetChangeDetector(object):
 
     def _detect_deleted_resources(self):
         for resource_id in self.deleted_resource_ids:
-            resource_name = self.old_resources_map[resource_id]['name']
-            event_dict = self.create_event_dict(
-                EVENT_TYPE_RESOURCE_DELETED,
-                resource_name=resource_name,
-                resource_id=resource_id,
-                changed_fields=None,
-            )
+            old_resource = self.old_resources_map[resource_id]
+            resource_name = old_resource['name']
 
-            self.append_event(ResourceEvent(**event_dict))
+            changes = _find_dict_changes(old_resource, {}, RESOURCE_FIELDS)
+            if changes:
+                list_of_changes = list(changes.values())
+                event_dict = self.create_event_dict(
+                    EVENT_TYPE_RESOURCE_DELETED,
+                    resource_name=resource_name,
+                    resource_id=resource_id,
+                    changed_fields=list_of_changes,
+                )
+
+                self.append_event(ResourceEvent(**event_dict))
 
     def _detect_created_resources(self):
         for resource_id in self.created_resource_ids:
-            resource_name = self.new_resources_map[resource_id]['name']
-            event_dict = self.create_event_dict(
-                EVENT_TYPE_RESOURCE_CREATED,
-                resource_name=resource_name,
-                resource_id=resource_id,
-                changed_fields=None,
-            )
-            self.append_event(ResourceEvent(**event_dict))
+            new_resource = self.new_resources_map[resource_id]
+            resource_name = new_resource['name']
+
+            changes = _find_dict_changes({}, new_resource, RESOURCE_FIELDS)
+            if changes:
+                list_of_changes = list(changes.values())
+                event_dict = self.create_event_dict(
+                    EVENT_TYPE_RESOURCE_CREATED,
+                    resource_name=resource_name,
+                    resource_id=resource_id,
+                    changed_fields=list_of_changes,
+                )
+                self.append_event(ResourceEvent(**event_dict))
 
     def _detect_changed_resources(self):
         for resource_id in self.common_resource_ids:
@@ -229,8 +243,6 @@ class DatasetChangeDetector(object):
 
 
 class ResourceChangeDetector(object):
-
-    FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 
     def __init__(self, dataset_detector: DatasetChangeDetector, old_resource: dict, new_resource:dict) -> None:
         super().__init__()
@@ -262,12 +274,14 @@ class ResourceChangeDetector(object):
 
     def _detect_data_modified(self):
         key = 'last_modified'
-        if self.old_resource[key] != self.new_resource[key]:
-            event_dict = self.create_event_dict(EVENT_TYPE_RESOURCE_DATA_CHANGED, changed_fields=None)
+        changes = _find_dict_changes(self.old_resource, self.new_resource, {key})
+        if changes:
+            list_of_changes = list(changes.values())
+            event_dict = self.create_event_dict(EVENT_TYPE_RESOURCE_DATA_CHANGED, changed_fields=list_of_changes)
             self.append_event(ResourceEvent(**event_dict))
 
     def _detect_metadata_changed(self):
-        changes = _find_dict_changes(self.old_resource, self.new_resource, self.FIELDS)
+        changes = _find_dict_changes(self.old_resource, self.new_resource, RESOURCE_FIELDS)
         if changes:
             list_of_changes = list(changes.values())
             event_dict = self.create_event_dict(EVENT_TYPE_RESOURCE_METADATA_CHANGED, changed_fields=list_of_changes)
@@ -325,7 +339,6 @@ class ResourceChangeDetector(object):
 
 
 class SpreadsheetChangeDetector(object):
-    FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
     def __init__(self, resource_detector: ResourceChangeDetector, sheet_id:str, old_sheet: dict, new_sheet:dict) -> None:
         super().__init__()
@@ -346,7 +359,7 @@ class SpreadsheetChangeDetector(object):
         self._detect_internal_sheet_changes()
 
     def _detect_internal_sheet_changes(self):
-        changes = _find_dict_changes(self.old_sheet, self.new_sheet, self.FIELDS)
+        changes = _find_dict_changes(self.old_sheet, self.new_sheet, SPREADSHEET_FIELDS)
         if changes:
             list_of_changes = list(changes.values())
             event_dict = self.create_event_dict(changed_fields=list_of_changes)
