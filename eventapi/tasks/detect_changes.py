@@ -126,6 +126,8 @@ class DatasetChangeDetector(object):
         self.dataset_name = new_dataset_dict['name']
         self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
 
+        self._process_fields()
+
         self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
             _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
                            lambda idx, resource_dict: resource_dict['id'])
@@ -240,6 +242,12 @@ class DatasetChangeDetector(object):
             old_resource = self.old_resources_map[resource_id]
             new_resource = self.new_resources_map[resource_id]
             ResourceChangeDetector(self, old_resource, new_resource).detect_changes()
+
+    def _process_fields(self):
+        self.old_dataset_dict['owner_org'] = self.old_dataset_dict.get('organization', {}).get('id') \
+            if self.old_dataset_dict.get('organization') else None
+        self.new_dataset_dict['owner_org'] = self.new_dataset_dict.get('organization', {}).get('id') \
+            if self.new_dataset_dict.get('organization') else None
 
 
 class ResourceChangeDetector(object):
@@ -400,9 +408,18 @@ def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) 
             changes[field] = {
                 'field': field,
                 'new_value': new_value,
+                'new_display_value': _get_display_value(field, new_dict),
                 'old_value': old_value,
+                'old_display_value': _get_display_value(field, old_dict),
             }
     return changes
+
+
+def _get_display_value(field, source_dict):
+    if field == 'owner_org':
+        return source_dict.get('organization', {}).get('title') \
+            if source_dict.get('organization') else None
+    return None
 
 
 def _filter_dict_certain_keys(source_dict: dict, parent_key: str, keys_to_keep: dict):
