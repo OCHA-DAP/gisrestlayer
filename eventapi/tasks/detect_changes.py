@@ -26,7 +26,8 @@ _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 
 DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
                   'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other', 'methodology',
-                  'methodology_other', 'caveats', 'archived', 'is_requestdata_type'}
+                  'maintainer', 'methodology_other', 'caveats', 'archived',
+                  'private', 'is_requestdata_type'}
 RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
@@ -408,18 +409,18 @@ def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) 
             changes[field] = {
                 'field': field,
                 'new_value': new_value,
-                'new_display_value': _get_display_value(field, new_dict),
+                'new_display_value': _get_display_value(field, new_dict, new_value),
                 'old_value': old_value,
-                'old_display_value': _get_display_value(field, old_dict),
+                'old_display_value': _get_display_value(field, old_dict, old_value),
             }
     return changes
 
 
-def _get_display_value(field, source_dict):
+def _get_display_value(field, source_dict, default_value=None):
     if field == 'owner_org':
         return source_dict.get('organization', {}).get('title') \
             if source_dict.get('organization') else None
-    return None
+    return default_value
 
 
 def _filter_dict_certain_keys(source_dict: dict, parent_key: str, keys_to_keep: dict):
