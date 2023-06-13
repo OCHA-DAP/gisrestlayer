@@ -13,5 +13,5 @@ requests
 
 future
 
-git+https://github.com/OCHA-DAP/hdx-redis-lib.git@0.1.2
+git+https://github.com/OCHA-DAP/hdx-redis-lib.git@0.2.1
 
