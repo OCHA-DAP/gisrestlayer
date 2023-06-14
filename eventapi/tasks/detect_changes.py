@@ -127,7 +127,7 @@ class DatasetChangeDetector(object):
         self.dataset_name = new_dataset_dict['name']
         self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
 
-        self._process_fields()
+        self._replace_needed_values()
 
         self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
             _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
@@ -244,11 +244,13 @@ class DatasetChangeDetector(object):
             new_resource = self.new_resources_map[resource_id]
             ResourceChangeDetector(self, old_resource, new_resource).detect_changes()
 
-    def _process_fields(self):
-        self.old_dataset_dict['owner_org'] = self.old_dataset_dict.get('organization', {}).get('id') \
-            if self.old_dataset_dict.get('organization') else None
-        self.new_dataset_dict['owner_org'] = self.new_dataset_dict.get('organization', {}).get('id') \
-            if self.new_dataset_dict.get('organization') else None
+    def _replace_needed_values(self):
+        if self.old_dataset_dict:
+            self.old_dataset_dict['owner_org'] = self.old_dataset_dict.get('organization', {}).get('id') \
+                if self.old_dataset_dict.get('organization') else None
+        if self.new_dataset_dict:
+            self.new_dataset_dict['owner_org'] = self.new_dataset_dict.get('organization', {}).get('id') \
+                if self.new_dataset_dict.get('organization') else None
 
 
 class ResourceChangeDetector(object):
