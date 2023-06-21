@@ -8,7 +8,7 @@ keys=consoleHandler, fileHandler
 keys=simpleFormatter
 
 [logger_root]
-level=INFO
+level=${LOG_LEVEL}
 handlers=consoleHandler, fileHandler
 
 [logger_werkzeug]
@@ -18,37 +18,37 @@ qualname=werkzeug
 propagate=0
 
 [logger_importapi]
-level=DEBUG
+level=${LOG_LEVEL}
 handlers=consoleHandler, fileHandler
 qualname=importapi
 propagate=0
 
 [logger_deleteapi]
-level=DEBUG
+level=${LOG_LEVEL}
 handlers=consoleHandler, fileHandler
 qualname=deleteapi
 propagate=0
 
 [logger_analyticsapi]
-level=DEBUG
+level=${LOG_LEVEL}
 handlers=consoleHandler, fileHandler
 qualname=analyticsapi
 propagate=0
 
 [logger_schedulerapi]
-level=DEBUG
+level=${LOG_LEVEL}
 handlers=consoleHandler, fileHandler
 qualname=schedulerapi
 propagate=0
 
 [logger_filestructurecheckapi]
-level=DEBUG
+level=${LOG_LEVEL}
 handlers=consoleHandler, fileHandler
 qualname=schedulerapi
 propagate=0
 
 [logger_eventapi]
-level=DEBUG
+level=${LOG_LEVEL}
 handlers=consoleHandler, fileHandler
 qualname=schedulerapi
 propagate=0
