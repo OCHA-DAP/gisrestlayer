@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Set, Dict, Callable, Tuple, List
 
 from eventapi.helpers.stream_redis import stream_events_to_redis
+from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_value, get_license_name_by_value
 
 log = logging.getLogger(__name__)
 
@@ -420,6 +421,16 @@ def _get_display_value(field, source_dict, default_value=None):
     if field == 'owner_org':
         return source_dict.get('organization', {}).get('title') \
             if source_dict.get('organization') else None
+    elif field == 'subnational':
+        return 'subnational' if default_value == '1' else 'not subnational'
+    elif field == 'dataset_date':
+        return get_date_from_concat_str(default_value)
+    elif field == 'data_update_frequency':
+        return get_frequency_by_value(default_value)
+    elif field == 'license_id':
+        return get_license_name_by_value(default_value)
+    elif field == 'microdata':
+        return 'contains microdata' if default_value else 'does not contain microdata'
     return default_value
 
 
