@@ -8,8 +8,15 @@
 
 WORKER_ID=$(ifconfig eth0 | grep inet | awk '{ print $2 }' | awk -F \: '{ print $2 }')
 
+# LOGGING_CONF_FILE needs to be set before substituting app.conf.tpl
+export LOGGING_CONF_FILE=/srv/logging.conf
+
 # regenerate app.conf
 envsubst < /srv/gislayer/docker/app.conf.tpl > /srv/app.conf
+
+# regenerate logging.conf
+export LOG_LEVEL="${LOG_LEVEL:-INFO}"
+envsubst < /srv/gislayer/docker/logging.conf.tpl > /srv/logging.conf
 
 cd /srv/gislayer
 

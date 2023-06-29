@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Set, Dict, Callable, Tuple, List
 
 from eventapi.helpers.stream_redis import stream_events_to_redis
+from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_value, get_license_name_by_value
 
 log = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ class DatasetChangeDetector(object):
         self.dataset_name = new_dataset_dict['name']
         self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
 
-        self._process_fields()
+        self._replace_needed_values()
 
         self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
             _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
@@ -244,11 +245,13 @@ class DatasetChangeDetector(object):
             new_resource = self.new_resources_map[resource_id]
             ResourceChangeDetector(self, old_resource, new_resource).detect_changes()
 
-    def _process_fields(self):
-        self.old_dataset_dict['owner_org'] = self.old_dataset_dict.get('organization', {}).get('id') \
-            if self.old_dataset_dict.get('organization') else None
-        self.new_dataset_dict['owner_org'] = self.new_dataset_dict.get('organization', {}).get('id') \
-            if self.new_dataset_dict.get('organization') else None
+    def _replace_needed_values(self):
+        if self.old_dataset_dict:
+            self.old_dataset_dict['owner_org'] = self.old_dataset_dict.get('organization', {}).get('id') \
+                if self.old_dataset_dict.get('organization') else None
+        if self.new_dataset_dict:
+            self.new_dataset_dict['owner_org'] = self.new_dataset_dict.get('organization', {}).get('id') \
+                if self.new_dataset_dict.get('organization') else None
 
 
 class ResourceChangeDetector(object):
@@ -420,6 +423,16 @@ def _get_display_value(field, source_dict, default_value=None):
     if field == 'owner_org':
         return source_dict.get('organization', {}).get('title') \
             if source_dict.get('organization') else None
+    elif field == 'subnational':
+        return 'subnational' if default_value == '1' else 'not subnational'
+    elif field == 'dataset_date':
+        return get_date_from_concat_str(default_value)
+    elif field == 'data_update_frequency':
+        return get_frequency_by_value(default_value)
+    elif field == 'license_id':
+        return get_license_name_by_value(default_value)
+    elif field == 'microdata':
+        return 'contains microdata' if default_value else 'does not contain microdata'
     return default_value
 
 
