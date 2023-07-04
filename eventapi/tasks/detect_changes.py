@@ -123,28 +123,31 @@ class DatasetChangeDetector(object):
         self.username = username
         self.old_dataset_dict = old_dataset_dict
         self.new_dataset_dict = new_dataset_dict
+        self.package_type = new_dataset_dict['type'] if new_dataset_dict else old_dataset_dict['type']
 
-        self.dataset_id = new_dataset_dict['id']
-        self.dataset_name = new_dataset_dict['name']
-        self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
+        if self.package_type == 'dataset':
+            self.dataset_id = new_dataset_dict['id']
+            self.dataset_name = new_dataset_dict['name']
+            self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
 
-        self._replace_needed_values()
+            self._replace_needed_values()
 
-        self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
-            _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
-                           lambda idx, resource_dict: resource_dict['id'])
+            self.created_resource_ids, self.deleted_resource_ids, self.new_resources_map, self.old_resources_map = \
+                _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
+                               lambda idx, resource_dict: resource_dict['id'])
 
-        self.old_resources_map = {r['id']:r for r in old_dataset_dict.get('resources', [])}
-        self.new_resources_map = {r['id']:r for r in new_dataset_dict.get('resources', [])}
+            self.old_resources_map = {r['id']:r for r in old_dataset_dict.get('resources', [])}
+            self.new_resources_map = {r['id']:r for r in new_dataset_dict.get('resources', [])}
 
-        self.common_resource_ids = set(self.old_resources_map.keys()).intersection(self.new_resources_map.keys())
+            self.common_resource_ids = set(self.old_resources_map.keys()).intersection(self.new_resources_map.keys())
 
     def detect_changes(self):
-        self._detect_created_dataset()
-        self._detect_metadata_changed_dataset()
-        self._detect_deleted_resources()
-        self._detect_created_resources()
-        self._detect_changed_resources()
+        if self.package_type == 'dataset':
+            self._detect_created_dataset()
+            self._detect_metadata_changed_dataset()
+            self._detect_deleted_resources()
+            self._detect_created_resources()
+            self._detect_changed_resources()
 
     def create_event_dict(self, event_name, **kwargs):
         event_dict = {
