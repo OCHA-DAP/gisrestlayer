@@ -40,13 +40,14 @@ class Event(object):
     event_source: str
     # initiator_user_id: str
     initiator_user_name: str
+    org_id: str
+    org_name: str
 
 
 @dataclass
 class DatasetEvent(Event):
     dataset_name: str
     dataset_id: str
-    dataset_obj: [dict]
     changed_fields: [dict]
 
 
@@ -99,28 +100,13 @@ def detect_changes(task_arguments) -> List[Event]:
 
 class DatasetChangeDetector(object):
 
-    DATASET_OBJ_FIELDS = {
-        '': ['archived', 'creator_user_id', 'data_update_frequency', 'dataset_date', 'dataset_preview',
-             'dataset_source', 'has_geodata', 'has_quickcharts', 'has_showcases', 'id', 'is_requestdata_type',
-             'last_modified', 'license_id', 'license_title', 'license_url', 'maintainer', 'maintainer_email',
-             'metadata_created', 'metadata_modified', 'methodology', 'name', 'notes', 'num_resources', 'num_tags',
-             'owner_org', 'package_creator', 'pageviews_last_14_days', 'private', 'qa_completed', 'state',
-             'subnational', 'title', 'total_res_downloads', 'type', 'is_fresh', 'update_status', 'organization',
-             'groups', 'resources', 'tags'],
-        'organization': ['id', 'name', 'title', 'type', 'description', 'image_url', 'created', 'is_organization',
-                         'approval_status', 'state'],
-        'groups': ['description', 'display_name', 'id', 'image_display_url', 'name', 'title'],
-        'resources': ['created', 'datastore_active', 'description', 'download_url', 'format', 'hdx_rel_url', 'id',
-                      'last_modified', 'metadata_modified', 'microdata', 'mimetype', 'mimetype_inner', 'name',
-                      'package_id', 'pii', 'position', 'resource_type', 'size', 'state', 'url', 'url_type'],
-        'tags': ['display_name', 'id', 'name', 'state', 'vocabulary_id'],
-    }
-
     def __init__(self, username: str, old_dataset_dict: dict, new_dataset_dict: dict) -> None:
         super().__init__()
         self.change_events: [Event] = []
         self.timestamp = datetime.utcnow().isoformat()
         self.username = username
+        self.org_id = new_dataset_dict.get('organization', {}).get('id')
+        self.org_name = new_dataset_dict.get('organization', {}).get('name')
         self.old_dataset_dict = old_dataset_dict
         self.new_dataset_dict = new_dataset_dict
         self.package_type = new_dataset_dict['type'] if new_dataset_dict else old_dataset_dict['type']
@@ -128,7 +114,6 @@ class DatasetChangeDetector(object):
         if self.package_type == 'dataset':
             self.dataset_id = new_dataset_dict['id']
             self.dataset_name = new_dataset_dict['name']
-            self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
 
             self._replace_needed_values()
 
@@ -155,9 +140,10 @@ class DatasetChangeDetector(object):
             'event_time': self.timestamp,
             'event_source': 'ckan',
             'initiator_user_name': self.username,
+            'org_id': self.org_id,
+            'org_name': self.org_name,
             'dataset_name': self.dataset_name,
             'dataset_id': self.dataset_id,
-            'dataset_obj': self.dataset_obj,
         }
         for k, v in kwargs.items():
             event_dict[k] = v
