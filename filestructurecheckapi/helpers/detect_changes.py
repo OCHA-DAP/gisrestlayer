@@ -23,9 +23,10 @@ class FileStructureChangeDetector(ResourceChangeDetector):
             'event_time': None,
             'event_source': None,
             'initiator_user_name': None,
+            'org_id': None,
+            'org_name': None,
             'dataset_name': None,
             'dataset_id': None,
-            'dataset_obj': None,
             'resource_name': None,
             'resource_id': None,
         }

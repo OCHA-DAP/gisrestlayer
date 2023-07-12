@@ -4,14 +4,19 @@ from eventapi.helpers.helpers import get_frequency_by_value, get_license_name_by
 
 
 def test_dataset_changed_data_during_init():
-    new_dataset_dict = NEW_DATASET_DICT
-    old_dataset_dict = OLD_DATASET_DICT
+    new_dataset_dict = NEW_DATASET_DICT.copy()
+    old_dataset_dict = OLD_DATASET_DICT.copy()
 
-    detector = DatasetChangeDetector(new_dataset_dict=new_dataset_dict.copy(), old_dataset_dict=old_dataset_dict.copy(),
+    detector = DatasetChangeDetector(new_dataset_dict=new_dataset_dict, old_dataset_dict=old_dataset_dict,
                                      username='test_user')
 
     assert detector.new_dataset_dict == new_dataset_dict, 'new dataset dict should be the same'
     assert detector.old_dataset_dict == old_dataset_dict, 'old dataset dict should be the same'
+
+    assert detector.org_id == new_dataset_dict.get('organization', {}).get(
+        'id'), 'org_id should exist in the main body of the event'
+    assert detector.org_name == new_dataset_dict.get('organization', {}).get(
+        'name'), 'org_name should exist in the main body of the event'
 
 
 def test_detect_dataset_changes():
@@ -21,8 +26,6 @@ def test_detect_dataset_changes():
     assert len(dataset_metadata_changed_events) == 1, 'one dataset should have been modified'
 
     modified_event = dataset_metadata_changed_events[0]
-
-    assert modified_event.dataset_obj.get('id') == OLD_DATASET_DICT.get('id')
 
     assert len(modified_event.changed_fields) == 4
     assert {'data_update_frequency', 'notes', 'groups', 'tags'} == {item['field'] for item in
