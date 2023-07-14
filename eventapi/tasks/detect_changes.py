@@ -28,7 +28,7 @@ _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
                   'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other', 'methodology',
                   'maintainer', 'methodology_other', 'caveats', 'archived',
-                  'private', 'is_requestdata_type'}
+                  'private', 'is_requestdata_type', 'dataset_preview'}
 RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
