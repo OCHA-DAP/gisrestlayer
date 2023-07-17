@@ -165,6 +165,7 @@ class DatasetChangeDetector(object):
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
             self._detect_groups_change(changes)
             self._detect_tags_change(changes)
+            self._detect_customviz_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
                 event_dict = self.create_event_dict(EVENT_TYPE_DATASET_METADATA_CHANGED, changed_fields=list_of_changes)
@@ -193,6 +194,20 @@ class DatasetChangeDetector(object):
                 'field': 'tags',
                 'added_items': list(created_tags),
                 'removed_items': list(deleted_tags),
+            }
+
+    def _detect_customviz_change(self, changes):
+        created_customvizs, deleted_customvizs, _, _ = \
+            _compare_lists(
+                self.old_dataset_dict.get('customviz', []),
+                self.new_dataset_dict.get('customviz', []),
+                lambda idx, customviz: customviz['url']
+            )
+        if created_customvizs or deleted_customvizs:
+            changes['customviz'] = {
+                'field': 'customviz',
+                'added_items': list(created_customvizs),
+                'removed_items': list(deleted_customvizs),
             }
 
     def _detect_deleted_resources(self):
