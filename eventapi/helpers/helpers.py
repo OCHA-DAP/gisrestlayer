@@ -16,12 +16,26 @@ UPDATE_FREQ_DICT = {
 LICENSES_DICT = {
     'cc-by': 'Creative Commons Attribution International',
     'cc-by-igo': 'Creative Commons Attribution for Intergovernmental Organisations',
+    'cc-by-sa': 'Creative Commons Attribution Share-Alike',
+    'cc-nc': 'Creative Commons Non-Commercial (Any)',
+    'cc-zero': 'Creative Commons CCZero',
+    'gfdl': 'GNU Free Documentation License',
     'hdx-multi': 'Multiple Licenses',
-    'hdx-other': 'Other',
-    'hdx-odc-odbl': 'Open Database License (ODC-ODbL)',
     'hdx-odc-by': 'Open Data Commons Attribution License (ODC-BY)',
+    'hdx-odc-odbl': 'Open Database License (ODC-ODbL)',
+    'hdx-other': 'Other',
     'hdx-pddl': 'Open Data Commons Public Domain Dedication and License (PDDL)',
-    'other-pd-nr': 'Public Domain / No Restrictions'
+    'notspecified': 'License not specified',
+    'odc-by': 'Open Data Commons Attribution License',
+    'odc-odbl': 'Open Data Commons Open Database License (ODbL)',
+    'odc-pddl': 'Open Data Commons Public Domain Dedication and License (PDDL)',
+    'other-at': 'Other (Attribution)',
+    'other-closed': 'Other (Not Open)',
+    'other-nc': 'Other (Non-Commercial)',
+    'other-open': 'Other (Open)',
+    'other-pd': 'Other (Public Domain)',
+    'other-pd-nr': 'Public Domain / No Restrictions',
+    'uk-ogl': 'UK Open Government Licence (OGL)'
 }
 
 
