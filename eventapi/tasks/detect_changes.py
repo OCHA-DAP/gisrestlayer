@@ -29,7 +29,7 @@ _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
                   'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other', 'methodology',
                   'maintainer', 'methodology_other', 'caveats', 'archived',
-                  'private', 'is_requestdata_type', 'state'}
+                  'private', 'is_requestdata_type', 'dataset_preview', 'state'}
 RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
@@ -177,6 +177,7 @@ class DatasetChangeDetector(object):
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
             self._detect_groups_change(changes)
             self._detect_tags_change(changes)
+            self._detect_customviz_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
                 event_dict = self.create_event_dict(EVENT_TYPE_DATASET_METADATA_CHANGED, changed_fields=list_of_changes)
@@ -205,6 +206,20 @@ class DatasetChangeDetector(object):
                 'field': 'tags',
                 'added_items': list(created_tags),
                 'removed_items': list(deleted_tags),
+            }
+
+    def _detect_customviz_change(self, changes):
+        created_customvizs, deleted_customvizs, _, _ = \
+            _compare_lists(
+                self.old_dataset_dict.get('customviz', []),
+                self.new_dataset_dict.get('customviz', []),
+                lambda idx, customviz: customviz['url']
+            )
+        if created_customvizs or deleted_customvizs:
+            changes['customviz'] = {
+                'field': 'customviz',
+                'added_items': list(created_customvizs),
+                'removed_items': list(deleted_customvizs),
             }
 
     def _detect_deleted_resources(self):
