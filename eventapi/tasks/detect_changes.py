@@ -11,6 +11,7 @@ from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_
 log = logging.getLogger(__name__)
 
 EVENT_TYPE_DATASET_CREATED = 'dataset-created'
+EVENT_TYPE_DATASET_DELETED = 'dataset-deleted'
 EVENT_TYPE_DATASET_METADATA_CHANGED = 'dataset-metadata-changed'
 
 EVENT_TYPE_RESOURCE_DELETED = 'resource-deleted'
@@ -28,7 +29,7 @@ _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
                   'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other', 'methodology',
                   'maintainer', 'methodology_other', 'caveats', 'archived',
-                  'private', 'is_requestdata_type'}
+                  'private', 'is_requestdata_type', 'dataset_preview', 'state'}
 RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
@@ -40,13 +41,14 @@ class Event(object):
     event_source: str
     # initiator_user_id: str
     initiator_user_name: str
+    org_id: str
+    org_name: str
 
 
 @dataclass
 class DatasetEvent(Event):
     dataset_name: str
     dataset_id: str
-    dataset_obj: [dict]
     changed_fields: [dict]
 
 
@@ -86,6 +88,8 @@ def detect_changes(task_arguments) -> List[Event]:
             log.error(str(e))
 
     return detector.change_events
+
+
 #     post_changes(event_list)
 #
 #
@@ -99,28 +103,13 @@ def detect_changes(task_arguments) -> List[Event]:
 
 class DatasetChangeDetector(object):
 
-    DATASET_OBJ_FIELDS = {
-        '': ['archived', 'creator_user_id', 'data_update_frequency', 'dataset_date', 'dataset_preview',
-             'dataset_source', 'has_geodata', 'has_quickcharts', 'has_showcases', 'id', 'is_requestdata_type',
-             'last_modified', 'license_id', 'license_title', 'license_url', 'maintainer', 'maintainer_email',
-             'metadata_created', 'metadata_modified', 'methodology', 'name', 'notes', 'num_resources', 'num_tags',
-             'owner_org', 'package_creator', 'pageviews_last_14_days', 'private', 'qa_completed', 'state',
-             'subnational', 'title', 'total_res_downloads', 'type', 'is_fresh', 'update_status', 'organization',
-             'groups', 'resources', 'tags'],
-        'organization': ['id', 'name', 'title', 'type', 'description', 'image_url', 'created', 'is_organization',
-                         'approval_status', 'state'],
-        'groups': ['description', 'display_name', 'id', 'image_display_url', 'name', 'title'],
-        'resources': ['created', 'datastore_active', 'description', 'download_url', 'format', 'hdx_rel_url', 'id',
-                      'last_modified', 'metadata_modified', 'microdata', 'mimetype', 'mimetype_inner', 'name',
-                      'package_id', 'pii', 'position', 'resource_type', 'size', 'state', 'url', 'url_type'],
-        'tags': ['display_name', 'id', 'name', 'state', 'vocabulary_id'],
-    }
-
     def __init__(self, username: str, old_dataset_dict: dict, new_dataset_dict: dict) -> None:
         super().__init__()
         self.change_events: [Event] = []
         self.timestamp = datetime.utcnow().isoformat()
         self.username = username
+        self.org_id = new_dataset_dict.get('organization', {}).get('id')
+        self.org_name = new_dataset_dict.get('organization', {}).get('name')
         self.old_dataset_dict = old_dataset_dict
         self.new_dataset_dict = new_dataset_dict
         self.package_type = new_dataset_dict['type'] if new_dataset_dict else old_dataset_dict['type']
@@ -128,7 +117,6 @@ class DatasetChangeDetector(object):
         if self.package_type == 'dataset':
             self.dataset_id = new_dataset_dict['id']
             self.dataset_name = new_dataset_dict['name']
-            self.dataset_obj = _filter_dict_certain_keys(new_dataset_dict.copy(), '', self.DATASET_OBJ_FIELDS)
 
             self._replace_needed_values()
 
@@ -136,14 +124,15 @@ class DatasetChangeDetector(object):
                 _compare_lists(old_dataset_dict.get('resources', []), new_dataset_dict.get('resources', []),
                                lambda idx, resource_dict: resource_dict['id'])
 
-            self.old_resources_map = {r['id']:r for r in old_dataset_dict.get('resources', [])}
-            self.new_resources_map = {r['id']:r for r in new_dataset_dict.get('resources', [])}
+            self.old_resources_map = {r['id']: r for r in old_dataset_dict.get('resources', [])}
+            self.new_resources_map = {r['id']: r for r in new_dataset_dict.get('resources', [])}
 
             self.common_resource_ids = set(self.old_resources_map.keys()).intersection(self.new_resources_map.keys())
 
     def detect_changes(self):
         if self.package_type == 'dataset':
             self._detect_created_dataset()
+            self._detect_deleted_dataset()
             self._detect_metadata_changed_dataset()
             self._detect_deleted_resources()
             self._detect_created_resources()
@@ -155,9 +144,10 @@ class DatasetChangeDetector(object):
             'event_time': self.timestamp,
             'event_source': 'ckan',
             'initiator_user_name': self.username,
+            'org_id': self.org_id,
+            'org_name': self.org_name,
             'dataset_name': self.dataset_name,
             'dataset_id': self.dataset_id,
-            'dataset_obj': self.dataset_obj,
         }
         for k, v in kwargs.items():
             event_dict[k] = v
@@ -174,11 +164,20 @@ class DatasetChangeDetector(object):
                 event_dict = self.create_event_dict(EVENT_TYPE_DATASET_CREATED, changed_fields=list_of_changes)
                 self.append_event(DatasetEvent(**event_dict))
 
+    def _detect_deleted_dataset(self):
+        if self.old_dataset_dict and self.new_dataset_dict:
+            changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
+            if changes:
+                list_of_changes = list(changes.values())
+                event_dict = self.create_event_dict(EVENT_TYPE_DATASET_DELETED, changed_fields=list_of_changes)
+                self.append_event(DatasetEvent(**event_dict))
+
     def _detect_metadata_changed_dataset(self):
         if self.old_dataset_dict:
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
             self._detect_groups_change(changes)
             self._detect_tags_change(changes)
+            self._detect_customviz_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
                 event_dict = self.create_event_dict(EVENT_TYPE_DATASET_METADATA_CHANGED, changed_fields=list_of_changes)
@@ -207,6 +206,20 @@ class DatasetChangeDetector(object):
                 'field': 'tags',
                 'added_items': list(created_tags),
                 'removed_items': list(deleted_tags),
+            }
+
+    def _detect_customviz_change(self, changes):
+        created_customvizs, deleted_customvizs, _, _ = \
+            _compare_lists(
+                self.old_dataset_dict.get('customviz', []),
+                self.new_dataset_dict.get('customviz', []),
+                lambda idx, customviz: customviz['url']
+            )
+        if created_customvizs or deleted_customvizs:
+            changes['customviz'] = {
+                'field': 'customviz',
+                'added_items': list(created_customvizs),
+                'removed_items': list(deleted_customvizs),
             }
 
     def _detect_deleted_resources(self):
@@ -259,7 +272,7 @@ class DatasetChangeDetector(object):
 
 class ResourceChangeDetector(object):
 
-    def __init__(self, dataset_detector: DatasetChangeDetector, old_resource: dict, new_resource:dict) -> None:
+    def __init__(self, dataset_detector: DatasetChangeDetector, old_resource: dict, new_resource: dict) -> None:
         super().__init__()
         self.dataset_detector = dataset_detector
         self.old_resource = old_resource
@@ -355,7 +368,8 @@ class ResourceChangeDetector(object):
 
 class SpreadsheetChangeDetector(object):
 
-    def __init__(self, resource_detector: ResourceChangeDetector, sheet_id:str, old_sheet: dict, new_sheet:dict) -> None:
+    def __init__(self, resource_detector: ResourceChangeDetector, sheet_id: str, old_sheet: dict,
+                 new_sheet: dict) -> None:
         super().__init__()
         self.sheet_id = sheet_id
         self.old_sheet = old_sheet
@@ -382,7 +396,7 @@ class SpreadsheetChangeDetector(object):
 
 
 def _compare_lists(old_list: [dict], new_list: [dict], item_id_extractor: Callable[[int, dict], str]) -> \
-        Tuple[ Set[str], Set[str], Dict[str, Dict], Dict[str, Dict]]:
+        Tuple[Set[str], Set[str], Dict[str, Dict], Dict[str, Dict]]:
     '''
     Compares two lists of dictionaries and returns the IDs of created and deleted items,
     and dictionaries of old and new items.
