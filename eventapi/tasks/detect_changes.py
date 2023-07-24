@@ -41,15 +41,17 @@ class Event(object):
     event_source: str
     # initiator_user_id: str
     initiator_user_name: str
-    org_id: str
-    org_name: str
 
 
 @dataclass
 class DatasetEvent(Event):
     dataset_name: str
+    dataset_title: str
     dataset_id: str
     changed_fields: [dict]
+    org_id: str
+    org_name: str
+    org_title: str
 
 
 @dataclass
@@ -110,6 +112,7 @@ class DatasetChangeDetector(object):
         self.username = username
         self.org_id = new_dataset_dict.get('organization', {}).get('id')
         self.org_name = new_dataset_dict.get('organization', {}).get('name')
+        self.org_title = new_dataset_dict.get('organization', {}).get('title')
         self.old_dataset_dict = old_dataset_dict
         self.new_dataset_dict = new_dataset_dict
         self.package_type = new_dataset_dict['type'] if new_dataset_dict else old_dataset_dict['type']
@@ -117,6 +120,7 @@ class DatasetChangeDetector(object):
         if self.package_type == 'dataset':
             self.dataset_id = new_dataset_dict['id']
             self.dataset_name = new_dataset_dict['name']
+            self.dataset_title = new_dataset_dict['title']
 
             self._replace_needed_values()
 
@@ -146,7 +150,9 @@ class DatasetChangeDetector(object):
             'initiator_user_name': self.username,
             'org_id': self.org_id,
             'org_name': self.org_name,
+            'org_title': self.org_title,
             'dataset_name': self.dataset_name,
+            'dataset_title': self.dataset_title,
             'dataset_id': self.dataset_id,
         }
         for k, v in kwargs.items():
