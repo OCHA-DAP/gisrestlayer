@@ -31,7 +31,7 @@ def test_detect_changes_updated_dataset():
         'old_dataset_dict': OLD_DATASET_DICT,
         'new_dataset_dict': NEW_DATASET_DICT,
     })
-    assert len(events) == 6, '1 dataset-metadata-changed, 1 resource-deleted, 1 resource-created,' \
+    assert len(events) == 5, '1 dataset-metadata-changed, 1 resource-deleted, 1 resource-created,' \
                              '1 resource-metadata-changed, 1 resource-data'
 
     dataset_metadata_changed = cast(DatasetEvent,
