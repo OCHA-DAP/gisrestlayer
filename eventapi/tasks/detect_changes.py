@@ -165,6 +165,9 @@ class DatasetChangeDetector(object):
     def _detect_created_dataset(self):
         if not self.old_dataset_dict:
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
+            self._detect_groups_change(changes)
+            self._detect_tags_change(changes)
+            self._detect_customviz_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
                 event_dict = self.create_event_dict(EVENT_TYPE_DATASET_CREATED, changed_fields=list_of_changes)
