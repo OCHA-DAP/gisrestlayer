@@ -136,12 +136,14 @@ class DatasetChangeDetector(object):
 
     def detect_changes(self):
         if self.package_type == 'dataset':
-            self._detect_created_dataset()
-            self._detect_deleted_dataset()
-            self._detect_metadata_changed_dataset()
-            self._detect_deleted_resources()
-            self._detect_created_resources()
-            self._detect_changed_resources()
+            if self.new_dataset_dict.get('state','active') == 'deleted':
+                self._detect_deleted_dataset()
+            else:
+                self._detect_created_dataset()
+                self._detect_metadata_changed_dataset()
+                self._detect_deleted_resources()
+                self._detect_created_resources()
+                self._detect_changed_resources()
 
     def create_event_dict(self, event_name, **kwargs):
         event_dict = {
