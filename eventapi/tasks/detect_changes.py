@@ -27,9 +27,10 @@ EVENT_TYPE_SPREADSHEET_SHEET_CHANGED = 'spreadsheet-sheet-changed'
 _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 
 DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
-                  'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other', 'methodology',
+                  'data_update_frequency', 'license_id', 'license_other', 'methodology',
                   'maintainer', 'methodology_other', 'caveats', 'archived',
-                  'private', 'is_requestdata_type', 'dataset_preview', 'state'}
+                  'private', 'is_requestdata_type', 'dataset_preview', 'state', 'num_of_rows', 'field_names',
+                  'file_types'}
 RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
@@ -183,6 +184,8 @@ class DatasetChangeDetector(object):
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
             self._detect_groups_change(changes)
             self._detect_tags_change(changes)
+            self._detect_connect_field_names_change(changes)
+            self._detect_connect_file_types_change(changes)
             self._detect_customviz_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
@@ -212,6 +215,38 @@ class DatasetChangeDetector(object):
                 'field': 'tags',
                 'added_items': list(created_tags),
                 'removed_items': list(deleted_tags),
+            }
+
+    def _detect_connect_field_names_change(self, changes):
+        old_field_names_list = self.old_dataset_dict.get('field_names', '').split(',')
+        new_field_names_list = self.new_dataset_dict.get('field_names', '').split(',')
+        created_field_names, deleted_field_names, _, _ = \
+            _compare_lists(
+                (item for item in old_field_names_list),
+                (item for item in new_field_names_list),
+                lambda idx, item: item
+            )
+        if created_field_names or deleted_field_names:
+            changes['field_names'] = {
+                'field': 'field_names',
+                'added_items': list(created_field_names),
+                'removed_items': list(deleted_field_names),
+            }
+
+    def _detect_connect_file_types_change(self, changes):
+        old_file_types_list = self.old_dataset_dict.get('file_types', '').split(',')
+        new_file_types_list = self.new_dataset_dict.get('file_types', '').split(',')
+        created_file_types, deleted_file_types, _, _ = \
+            _compare_lists(
+                (item for item in old_file_types_list),
+                (item for item in new_file_types_list),
+                lambda idx, item: item
+            )
+        if created_file_types or deleted_file_types:
+            changes['file_types'] = {
+                'field': 'file_types',
+                'added_items': list(created_file_types),
+                'removed_items': list(deleted_file_types),
             }
 
     def _detect_customviz_change(self, changes):
