@@ -13,5 +13,6 @@ requests
 
 future
 
+python-json-logger~=2.0.7
 git+https://github.com/OCHA-DAP/hdx-redis-lib.git@0.2.1
 
