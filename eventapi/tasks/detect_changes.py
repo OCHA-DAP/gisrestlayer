@@ -27,9 +27,10 @@ EVENT_TYPE_SPREADSHEET_SHEET_CHANGED = 'spreadsheet-sheet-changed'
 _VOCABULARY_ID = 'b891512e-9516-4bf5-962a-7a289772a2a1'
 
 DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'owner_org', 'dataset_date',
-                  'data_update_frequency', 'data_update_frequency', 'license_id', 'license_other', 'methodology',
+                  'data_update_frequency', 'license_id', 'license_other', 'methodology',
                   'maintainer', 'methodology_other', 'caveats', 'archived',
-                  'private', 'is_requestdata_type', 'dataset_preview', 'state'}
+                  'private', 'is_requestdata_type', 'dataset_preview', 'state', 'num_of_rows', 'field_names',
+                  'file_types'}
 RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
@@ -41,15 +42,17 @@ class Event(object):
     event_source: str
     # initiator_user_id: str
     initiator_user_name: str
-    org_id: str
-    org_name: str
 
 
 @dataclass
 class DatasetEvent(Event):
     dataset_name: str
+    dataset_title: str
     dataset_id: str
     changed_fields: [dict]
+    org_id: str
+    org_name: str
+    org_title: str
 
 
 @dataclass
@@ -110,6 +113,7 @@ class DatasetChangeDetector(object):
         self.username = username
         self.org_id = new_dataset_dict.get('organization', {}).get('id')
         self.org_name = new_dataset_dict.get('organization', {}).get('name')
+        self.org_title = new_dataset_dict.get('organization', {}).get('title')
         self.old_dataset_dict = old_dataset_dict
         self.new_dataset_dict = new_dataset_dict
         self.package_type = new_dataset_dict['type'] if new_dataset_dict else old_dataset_dict['type']
@@ -117,6 +121,7 @@ class DatasetChangeDetector(object):
         if self.package_type == 'dataset':
             self.dataset_id = new_dataset_dict['id']
             self.dataset_name = new_dataset_dict['name']
+            self.dataset_title = new_dataset_dict['title']
 
             self._replace_needed_values()
 
@@ -131,12 +136,14 @@ class DatasetChangeDetector(object):
 
     def detect_changes(self):
         if self.package_type == 'dataset':
-            self._detect_created_dataset()
-            self._detect_deleted_dataset()
-            self._detect_metadata_changed_dataset()
-            self._detect_deleted_resources()
-            self._detect_created_resources()
-            self._detect_changed_resources()
+            if self.new_dataset_dict.get('state','active') == 'deleted':
+                self._detect_deleted_dataset()
+            else:
+                self._detect_created_dataset()
+                self._detect_metadata_changed_dataset()
+                self._detect_deleted_resources()
+                self._detect_created_resources()
+                self._detect_changed_resources()
 
     def create_event_dict(self, event_name, **kwargs):
         event_dict = {
@@ -146,7 +153,9 @@ class DatasetChangeDetector(object):
             'initiator_user_name': self.username,
             'org_id': self.org_id,
             'org_name': self.org_name,
+            'org_title': self.org_title,
             'dataset_name': self.dataset_name,
+            'dataset_title': self.dataset_title,
             'dataset_id': self.dataset_id,
         }
         for k, v in kwargs.items():
@@ -159,6 +168,9 @@ class DatasetChangeDetector(object):
     def _detect_created_dataset(self):
         if not self.old_dataset_dict:
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
+            self._detect_groups_change(changes)
+            self._detect_tags_change(changes)
+            self._detect_customviz_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
                 event_dict = self.create_event_dict(EVENT_TYPE_DATASET_CREATED, changed_fields=list_of_changes)
@@ -177,6 +189,8 @@ class DatasetChangeDetector(object):
             changes = _find_dict_changes(self.old_dataset_dict, self.new_dataset_dict, DATASET_FIELDS)
             self._detect_groups_change(changes)
             self._detect_tags_change(changes)
+            self._detect_connect_field_names_change(changes)
+            self._detect_connect_file_types_change(changes)
             self._detect_customviz_change(changes)
             if changes:
                 list_of_changes = list(changes.values())
@@ -206,6 +220,38 @@ class DatasetChangeDetector(object):
                 'field': 'tags',
                 'added_items': list(created_tags),
                 'removed_items': list(deleted_tags),
+            }
+
+    def _detect_connect_field_names_change(self, changes):
+        old_field_names_list = self.old_dataset_dict.get('field_names', '').split(',')
+        new_field_names_list = self.new_dataset_dict.get('field_names', '').split(',')
+        created_field_names, deleted_field_names, _, _ = \
+            _compare_lists(
+                (item for item in old_field_names_list),
+                (item for item in new_field_names_list),
+                lambda idx, item: item
+            )
+        if created_field_names or deleted_field_names:
+            changes['field_names'] = {
+                'field': 'field_names',
+                'added_items': list(created_field_names),
+                'removed_items': list(deleted_field_names),
+            }
+
+    def _detect_connect_file_types_change(self, changes):
+        old_file_types_list = self.old_dataset_dict.get('file_types', '').split(',')
+        new_file_types_list = self.new_dataset_dict.get('file_types', '').split(',')
+        created_file_types, deleted_file_types, _, _ = \
+            _compare_lists(
+                (item for item in old_file_types_list),
+                (item for item in new_file_types_list),
+                lambda idx, item: item
+            )
+        if created_file_types or deleted_file_types:
+            changes['file_types'] = {
+                'field': 'file_types',
+                'added_items': list(created_file_types),
+                'removed_items': list(deleted_file_types),
             }
 
     def _detect_customviz_change(self, changes):
