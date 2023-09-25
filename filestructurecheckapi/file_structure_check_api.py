@@ -32,7 +32,8 @@ def file_structure_check(dataset_id, resource_id):
         'resource_update_action': app.config.get('HDX_FS_CHECK_RESOURCE_REVISE'),
         'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL', True),
         'hdx_user_agent': app.config.get('HDX_USER_AGENT'),
-        'fs_check_info': call_arguments.get('fs_check_info')
+        'fs_check_info': call_arguments.get('fs_check_info'),
+        'batch_mode': 'KEEP_OLD',
     }
 
     fs_check_q.enqueue_call(func=fs_check.fs_check_task, args=[fs_check_args],
