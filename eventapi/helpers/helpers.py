@@ -1,4 +1,5 @@
 import datetime
+import re
 
 UPDATE_FREQ_DICT = {
     '1': 'Every day',
@@ -62,3 +63,34 @@ def get_frequency_by_value(value):
 
 def get_license_name_by_value(value):
     return LICENSES_DICT.get(value, value)
+
+
+def remove_markdown(markdown_text):
+    # Remove headers (lines starting with '#')
+    markdown_text = re.sub(r'^#+\s+', '', markdown_text, flags=re.MULTILINE)
+
+    # Remove emphasis (e.g., '*italic*', '**bold**')
+    markdown_text = re.sub(r'\*{1,2}([^*]+)\*{1,2}', r'\1', markdown_text)
+
+    # Remove code blocks (e.g., ```python ... ```)
+    markdown_text = re.sub(r'```[^`]+```', '', markdown_text)
+
+    # Remove inline code (e.g., `code`)
+    markdown_text = re.sub(r'`([^`]+)`', r'\1', markdown_text)
+
+    # Remove links (e.g., [text](url))
+    markdown_text = re.sub(r'\[([^]]+)\]\([^)]+\)', r'\1', markdown_text)
+
+    # Remove images (e.g., ![alt text](url))
+    markdown_text = re.sub(r'!\[([^\]]+)\]\([^)]+\)', r'\1', markdown_text)
+
+    # Remove lists (e.g., - item)
+    markdown_text = re.sub(r'^\s*[-*]\s+', '', markdown_text, flags=re.MULTILINE)
+
+    # Remove blockquotes (e.g., > quote)
+    markdown_text = re.sub(r'^>\s+', '', markdown_text, flags=re.MULTILINE)
+
+    # Remove horizontal rules (e.g., ---)
+    markdown_text = re.sub(r'^[-*_]{3,}\s*$', '', markdown_text, flags=re.MULTILINE)
+
+    return markdown_text

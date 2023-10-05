@@ -6,7 +6,8 @@ from datetime import datetime
 from typing import Set, Dict, Callable, Tuple, List
 
 from eventapi.helpers.stream_redis import stream_events_to_redis
-from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_value, get_license_name_by_value
+from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_value, get_license_name_by_value, \
+    remove_markdown
 
 log = logging.getLogger(__name__)
 
@@ -469,8 +470,8 @@ def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) 
         fields = set().union(old_dict.keys()).union(new_dict.keys())
     changes: Dict[str:dict] = {}
     for field in fields:
-        old_value = old_dict.get(field)
-        new_value = new_dict.get(field)
+        old_value = _truncate_and_remove_markdown(field, old_dict.get(field))
+        new_value = _truncate_and_remove_markdown(field, new_dict.get(field))
         if old_value != new_value:
             changes[field] = {
                 'field': field,
@@ -509,3 +510,18 @@ def _filter_dict_certain_keys(source_dict: dict, parent_key: str, keys_to_keep: 
             source_dict[key] = [_filter_dict_certain_keys(el, key, keys_to_keep) if isinstance(el, dict) else el for el
                                 in value]
     return source_dict
+
+
+def _truncate_and_remove_markdown(field_name, field_value):
+    # max character limit
+    max_char_limit = 32767
+
+    # list of fields
+    fields_to_truncate = ['notes', 'license_other', 'methodology_other', 'description', 'caveats']
+
+    if field_name in fields_to_truncate:
+        if field_value:
+            field_value = remove_markdown(field_value)
+            if len(field_value) > max_char_limit:
+                field_value = field_value[:max_char_limit]
+    return field_value
