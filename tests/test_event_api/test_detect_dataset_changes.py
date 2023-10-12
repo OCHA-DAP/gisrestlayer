@@ -80,13 +80,6 @@ def test_display_values_dataset_changes():
             assert get_license_name_by_value(new_license) in display_value
 
 
-def _detect_dataset_changes(new_dataset_item: dict, old_dataset_item: dict):
-    detector = DatasetChangeDetector(new_dataset_dict=new_dataset_item, old_dataset_dict=old_dataset_item,
-                                     username='test_user')
-    detector.detect_changes()
-    return detector.change_events
-
-
 def test_markdown_values_dataset_changes():
     dataset_dict = NEW_DATASET_DICT.copy()
     updated_dataset_dict = NEW_DATASET_DICT.copy()
@@ -127,3 +120,22 @@ def test_markdown_values_dataset_changes():
             expected_display_value = 'A Markdown example with HTML tags.    Text.'
 
         assert new_display_value == expected_display_value
+
+
+def test_no_dataset_changes_after_markdown_removal():
+    old_dataset_dict = NEW_DATASET_DICT.copy()
+    new_dataset_dict = NEW_DATASET_DICT.copy()
+
+    old_dataset_dict['notes'] = "This is a paragraph with bold and _italic_ text."
+    new_dataset_dict['notes'] = "This is a paragraph with **bold** and _italic_ text."
+
+    change_events = _detect_dataset_changes(new_dataset_dict, old_dataset_dict)
+
+    assert len(change_events) == 0, 'no changes should be detected after changing only the Markdown formatting'
+
+
+def _detect_dataset_changes(new_dataset_item: dict, old_dataset_item: dict):
+    detector = DatasetChangeDetector(new_dataset_dict=new_dataset_item, old_dataset_dict=old_dataset_item,
+                                     username='test_user')
+    detector.detect_changes()
+    return detector.change_events
