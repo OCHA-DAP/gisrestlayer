@@ -80,6 +80,60 @@ def test_display_values_dataset_changes():
             assert get_license_name_by_value(new_license) in display_value
 
 
+def test_markdown_values_dataset_changes():
+    dataset_dict = NEW_DATASET_DICT.copy()
+    updated_dataset_dict = NEW_DATASET_DICT.copy()
+
+    updated_dataset_dict['notes'] = """
+    This is a paragraph with **bold** and _italic_ text.
+    <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+    </ul>
+    [Visit our website](https://example.com)
+    <div class="warning">This is a warning!</div>
+    """
+    updated_dataset_dict['license_other'] = "This is a *Markdown* example <em>with</em> HTML tags.\n\nExtra text."
+    updated_dataset_dict['methodology_other'] = "   A *Markdown* example <em>with</em> HTML tags.   \n\nText.   \n\n   "
+
+    change_events = _detect_dataset_changes(updated_dataset_dict, dataset_dict)
+    changed_fields = change_events[0].changed_fields
+
+    updated_fields = {'notes', 'license_other', 'methodology_other'}
+
+    assert len(changed_fields) == len(updated_fields)
+    assert updated_fields == {item['field'] for item in changed_fields}
+
+    for changed_field in changed_fields:
+        field_name = changed_field['field']
+        new_display_value = changed_field['new_display_value']
+        expected_display_value = ''
+
+        if field_name == 'notes':
+            expected_display_value = (
+                'This is a paragraph with bold and italic text.              Item 1         '
+                'Item 2          Visit our website     This is a warning!'
+            )
+        elif field_name == 'license_other':
+            expected_display_value = 'This is a Markdown example with HTML tags. Extra text.'
+        elif field_name == 'methodology_other':
+            expected_display_value = 'A Markdown example with HTML tags.    Text.'
+
+        assert new_display_value == expected_display_value
+
+
+def test_no_dataset_changes_after_markdown_removal():
+    old_dataset_dict = NEW_DATASET_DICT.copy()
+    new_dataset_dict = NEW_DATASET_DICT.copy()
+
+    old_dataset_dict['notes'] = "This is a paragraph with bold and _italic_ text."
+    new_dataset_dict['notes'] = "This is a paragraph with **bold** and _italic_ text."
+
+    change_events = _detect_dataset_changes(new_dataset_dict, old_dataset_dict)
+
+    assert len(change_events) == 0, 'no changes should be detected after changing only the Markdown formatting'
+
+
 def _detect_dataset_changes(new_dataset_item: dict, old_dataset_item: dict):
     detector = DatasetChangeDetector(new_dataset_dict=new_dataset_item, old_dataset_dict=old_dataset_item,
                                      username='test_user')
