@@ -6,7 +6,8 @@ from datetime import datetime
 from typing import Set, Dict, Callable, Tuple, List
 
 from eventapi.helpers.stream_redis import stream_events_to_redis
-from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_value, get_license_name_by_value
+from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_value, get_license_name_by_value, \
+    extract_plain_text_from_markdown
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'ow
 RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
+MARKDOWN_FIELDS = ['notes', 'license_other', 'methodology_other', 'description', 'caveats']
 
 @dataclass
 class Event(object):
@@ -471,6 +473,11 @@ def _find_dict_changes(old_dict: dict, new_dict: dict, fields: Set[str] = None) 
     for field in fields:
         old_value = old_dict.get(field)
         new_value = new_dict.get(field)
+
+        if field in MARKDOWN_FIELDS:
+            old_value = extract_plain_text_from_markdown(old_value)
+            new_value = extract_plain_text_from_markdown(new_value)
+
         if old_value != new_value:
             changes[field] = {
                 'field': field,

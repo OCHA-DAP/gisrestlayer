@@ -1,4 +1,6 @@
 import datetime
+import re
+from markdown import markdown
 
 UPDATE_FREQ_DICT = {
     '1': 'Every day',
@@ -62,3 +64,17 @@ def get_frequency_by_value(value):
 
 def get_license_name_by_value(value):
     return LICENSES_DICT.get(value, value)
+
+
+def extract_plain_text_from_markdown(markdown_text):
+    """Extract plain text from Markdown content while removing HTML tags and special characters."""
+    if not markdown_text:
+        return ''
+
+    def strip_tags(html_text):
+        """Remove HTML tags from a string."""
+        return re.sub('<[^><]*>', '', html_text)
+
+    plain_text = strip_tags(markdown(markdown_text.strip()))
+    plain_text = plain_text.rstrip('\n').replace('\n', ' ').replace('\r', '').replace('"', "&quot;").strip()
+    return plain_text
