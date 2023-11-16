@@ -55,20 +55,20 @@ propagate=0
 
 [handler_consoleHandler]
 class=StreamHandler
-level=DEBUG
+level=${LOG_LEVEL_CONSOLE}
 formatter=simpleFormatter
 args=(sys.stdout,)
 
 [handler_fileHandler]
 class = FileHandler
 args = ('/var/log/gis.log','a')
-level = NOTSET
+level=${LOG_LEVEL_TXT}
 formatter = simpleFormatter
 
 [handler_jsonFileHandler]
 class = FileHandler
 args = ('/var/log/gis-json.log','a')
-level = NOTSET
+level=${LOG_LEVEL_JSON}
 formatter = jsonFormatter
 
 [formatter_simpleFormatter]
