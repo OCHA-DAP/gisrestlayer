@@ -55,7 +55,7 @@ propagate=0
 
 [handler_consoleHandler]
 class=StreamHandler
-level=level=${LOG_LEVEL_CONSOLE}
+level=${LOG_LEVEL_CONSOLE}
 formatter=simpleFormatter
 args=(sys.stdout,)
 
