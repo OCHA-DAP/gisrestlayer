@@ -218,7 +218,11 @@ class CreatePreviewTask(object):
                 output = subprocess.check_output(execute, stderr=subprocess.STDOUT)
             logger.info('Pushed to POSTGIS {} successfully to table {}'.format(filepath, resource_id))
         except subprocess.CalledProcessError as e:
-            logger.warning(str(e))
+            message = str(e)
+            message = message.replace(self.db_host, '*****') \
+                .replace(self.db_pass, '*****') \
+                .replace(self.db_user, '*****')
+            logger.warning(message)
             output = e.output
             output = output.decode('utf-8', 'ignore') if output else ''
             logger.debug('ogr2ogr output: {}'.format(output))
