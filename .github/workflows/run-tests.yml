@@ -8,6 +8,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: They are the same.
+        run: ln -s /usr/libexec/docker/cli-plugins/docker-compose /usr/sbin/docker-compose
       - name: Build the docker-compose stack
         run: docker-compose -f test-docker-compose.yml -p hdx_gislayer_test up -d
         env:
