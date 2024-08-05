@@ -1,5 +1,5 @@
 # FROM public.ecr.aws/unocha/alpine-base-s6:3.12
-FROM public.ecr.aws/unocha/python:3.12-stable
+FROM public.ecr.aws/unocha/python:3.9-stable
 
 ENV HDX_USER_AGENT=HDXINTERNAL_GEOPREVIEW
 
