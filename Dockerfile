@@ -10,6 +10,8 @@ RUN mkdir -p /etc/services.d/gislayer && mv docker/run_gislayer /etc/services.d/
     apk add --update-cache \
     gdal \
     gdal-tools \
+    gdal-driver-pg \
+    gdal-driver-libkml \
     gettext \
     libpq && \
     apk add --virtual .build-deps \
