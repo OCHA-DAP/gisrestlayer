@@ -7,6 +7,9 @@ import filestructurecheckapi.exceptions.exceptions as exceptions
 import filestructurecheckapi.helpers.detect_changes as dc
 import importapi.exceptions.exceptions as import_api_exceptions
 
+from urllib.error import HTTPError
+from json import JSONDecodeError
+
 logger = logging.getLogger(__name__)
 
 
@@ -51,6 +54,10 @@ class FSCheckTask(object):
             sheet_changes = self.process_fs_check_info_changes(data_dict)
             self.push_information_back_to_ckan(data_dict, sheet_changes)
             return response
+        except JSONDecodeError as ex:
+            logger.warning(ex)
+        except HTTPError as ex:
+            logger.warning(ex)
         except Exception as ex:
             logger.error(ex)
             raise exceptions.HXLProxyException('hxl proxy error/exception')
