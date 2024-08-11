@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import time
 
-import future.moves.urllib.parse as urlparse
+import urllib.parse as urlparse
 import requests
 
 import helpers.db_helper as db_helper
@@ -184,8 +184,9 @@ class CreatePreviewTask(object):
         execute = [
             'ogr2ogr',
             '--config',
-            'PG_USE_COPY',
-            'NO',
+            'PG_USE_COPY=NO',
+            '--config',
+            'OGR_PG_ENABLE_METADATA=NO',
             '-f',
             '"PostgreSQL"',
             'PG:host={} dbname={} port={} user={} password={}'.format(self.db_host, self.db_name, self.db_port,

@@ -93,4 +93,7 @@ def __register_monitor(app):
     app.config['RQ_DASHBOARD_REDIS_HOST'] = app.config['REDIS_HOST']
     app.config['RQ_DASHBOARD_REDIS_PORT'] = app.config['REDIS_PORT']
     app.config['RQ_DASHBOARD_REDIS_DB'] = app.config['REDIS_DB']
+    redis_url = f'redis://{app.config["REDIS_HOST"]}:{app.config["REDIS_PORT"]}/{app.config["REDIS_DB"]}'
+    app.config['RQ_DASHBOARD_REDIS_URL'] = redis_url
+    rq_dashboard.web.setup_rq_connection(app)
     app.register_blueprint(rq_dashboard.blueprint, url_prefix=app.config.get('MONITOR_URL', '/monitor'))

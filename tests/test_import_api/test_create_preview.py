@@ -81,7 +81,7 @@ def test_create_preview_kml(args, gisdb_info_in_env):
 
     create_preview_task, layer_metadata = _push_file_and_get_metadata(args, filepath)
     assert layer_metadata.get('bounding_box') == \
-        'BOX(-48.8424580754653 61.049858673079,-42.2929468978678 66.2053550371775)'
+        'BOX(-48.84245807546525 61.04985867307904,-42.29294689786775 66.20535503717753)'
     assert len(layer_metadata.get('layer_fields')) == 13
 
 
@@ -92,7 +92,7 @@ def test_create_preview_shapefile(args, gisdb_info_in_env, empty_tmp_folder):
     create_preview_task, layer_metadata = _unzip_and_push(args, filename, tmp_folder)
 
     assert layer_metadata.get('bounding_box') == \
-        'BOX(34.00334232 -4.40810323599999,41.81483496 4.47561039300001)'
+        'BOX(34.00334232 -4.408103235999988,41.814834959999985 4.475610393000011)'
     assert len(layer_metadata.get('layer_fields')) == 45
 
     create_preview_task.delete_download_directory()
@@ -110,7 +110,7 @@ def test_create_preview_shapefile_with_multilinestring_problem(args, gisdb_info_
     create_preview_task, layer_metadata = _unzip_and_push(args, filename, tmp_folder)
 
     assert layer_metadata.get('bounding_box') == \
-           'BOX(-158.090073902174 21.2775052439187,-67.7811766716047 62.1452071164588)'
+           'BOX(-158.09007390217414 21.277505243918654,-67.78117667160467 62.145207116458835)'
     assert len(layer_metadata.get('layer_fields')) == 7
 
     create_preview_task.delete_download_directory()
