@@ -10,8 +10,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build the docker compose stack
         run: docker compose -f test-docker-compose.yml -p hdx_gislayer_test up -d
-        env:
-          TEST_POSTGIS_PASSWORD: ${{secrets.TEST_POSTGIS_PASSWORD}}
       - name: Wait for stack to initialize
         run: docker compose -f test-docker-compose.yml -p hdx_gislayer_test exec -T gislayer sleep 5
       - name: Install testing dependencies
