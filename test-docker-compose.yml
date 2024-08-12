@@ -13,7 +13,7 @@ services:
       GIS_REST_LAYER_CONF: '/srv/gislayer/tests/test_app.conf'
       HDX_GISDB_DB: testdb
       HDX_GISDB_USER: testuser
-      HDX_GISDB_PASS: ${TEST_POSTGIS_PASSWORD}
+      HDX_GISDB_PASS: testpassword
 
     entrypoint: 'tail -f /dev/null'
   gisredis:
@@ -23,6 +23,10 @@ services:
     environment:
       TERM: 'xterm'
   gisdb:
-    image: unocha/postgis:9.6
+    image: postgis/postgis:11-3.2-alpine
     hostname: gisdb
+    environment:
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_USER: testuser
+      POSTGRES_DB: testdb
 

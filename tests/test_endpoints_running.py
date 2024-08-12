@@ -3,7 +3,7 @@ from flask import url_for
 
 
 def test_rq_monitor_endpoint_is_up(client, context_app):
-    response = client.get(url_for('rq_dashboard.overview'))
+    response = client.get(url_for('rq_dashboard.queues_overview'))
     assert response.status_code == 200
     assert 'Workers' in response.data.decode('utf-8')
 
