@@ -9,7 +9,7 @@ mixpanel~=4.10.1
 markdown==3.4.1
 
 # Fixing MarkupSafe version because of https://github.com/pallets/markupsafe/issues/284
-markupsafe==2.1.2
+markupsafe==2.1.5
 requests
 
 # Werkzeug<3.0.0
