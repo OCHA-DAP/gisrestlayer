@@ -32,7 +32,7 @@ DATASET_FIELDS = {'name', 'title', 'notes', 'subnational', 'dataset_source', 'ow
                   'maintainer', 'methodology_other', 'caveats', 'archived',
                   'private', 'is_requestdata_type', 'dataset_preview', 'state', 'num_of_rows', 'field_names',
                   'file_types'}
-RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url'}
+RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type', 'url', 'qa_hapi_report'}
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
 MARKDOWN_FIELDS = ['notes', 'license_other', 'methodology_other', 'description', 'caveats']
