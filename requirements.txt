@@ -1,7 +1,7 @@
 flask~=3.0.3
 # redis==3.2.1
 rq==1.13.0
-rq-dashboard~=0.7.1.2
+rq-dashboard~=0.8.0.2
 rq-scheduler==0.13.0
 psycopg2~=2.9.9
 ckanext-hdx_service_checker==0.0.8
