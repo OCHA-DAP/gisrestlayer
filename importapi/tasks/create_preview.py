@@ -197,6 +197,8 @@ class CreatePreviewTask(object):
             '-overwrite',
             '-lco',
             'OVERWRITE=YES',
+            '-lco',
+            'FID=ogc_fid',
             '-fieldTypeToString',
             'Real',
             '-t_srs',

@@ -82,7 +82,7 @@ def test_create_preview_kml(args, gisdb_info_in_env):
     create_preview_task, layer_metadata = _push_file_and_get_metadata(args, filepath)
     assert layer_metadata.get('bounding_box') == \
         'BOX(-48.84245807546525 61.04985867307904,-42.29294689786775 66.20535503717753)'
-    assert len(layer_metadata.get('layer_fields')) == 13
+    assert len(layer_metadata.get('layer_fields')) == 14
 
 
 def test_create_preview_shapefile(args, gisdb_info_in_env, empty_tmp_folder):
