@@ -26,6 +26,10 @@ CKAN_SERVER_URL = '${HDX_DOMAIN}'
 # CKAN_API_BASE_URL = 'http://${HDX_PREFIX}data.${HDX_DOMAIN}/api/action'
 CKAN_API_BASE_URL = 'http://ckan:5000/api/action'
 
+GISLAYER_BASE_URL = 'http://gislayer:5000'
+GISLAYER_FS_CHECK_URL = 'http://gislayer:5000/api/file-structure-check'
+HXL_PROXY_SOURCE_INFO_URL = 'http://hxl:5000/api/source-info?url=http://ckan:5000/dataset/{dataset_id}/resource/{resource_id}/download'
+
 CHECKS_CONFIG_PATH = '/srv/gislayer/config/config.json'
 
 MONITOR_URL = '${MONITOR_URL}'
