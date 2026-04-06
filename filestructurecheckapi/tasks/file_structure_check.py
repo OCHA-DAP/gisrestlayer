@@ -28,7 +28,7 @@ class FSCheckTask(object):
         self.dataset_id = args.get('dataset_id')
         self.resource_id = args.get('resource_id')
         self.verify_ckan_ssl = args.get('verify_ckan_ssl')
-        self.ckan_server_url = args.get('ckan_server_url')
+        # self.ckan_server_url = args.get('ckan_server_url')
         self.timeout = args.get('timeout_sec')
         self.hxl_proxy_source_info_url = args.get('hxl_proxy_source_info_url')
         self.fs_check_info = args.get(KEY_FS_CHECK_INFO)
@@ -61,7 +61,7 @@ class FSCheckTask(object):
             # response = requests.get(
             #     'https://data.humdata.org/hxlproxy/api/source-info?url=https://data.humdata.org/dataset/6c4c69cf-8ca0-4bfc-8c46-73cdb18812d5/resource/cfe1321e-89ce-43f3-b067-6da4bbb3ca80/download/somalia-2022-post-gu-total-acute-malnutrition-burden-and-prevalence-for-aug-2022-to-jul-2023-by.xlsx',
             #     allow_redirects=True)
-            logger.info("task done")
+            logger.info("hxl proxy GET task done")
             fs_check_info_dict = json.loads(response.text)
             sheet_changes = self.process_fs_check_info_changes(fs_check_info_dict)
             state, message = self._resolve_state_and_message(fs_check_info_dict)
@@ -72,6 +72,7 @@ class FSCheckTask(object):
                 message=message,
             )
             return response
+            # return None
         except JSONDecodeError as ex:
             logger.warning(ex)
             self.push_information_back_to_ckan(
@@ -101,12 +102,13 @@ class FSCheckTask(object):
             raise exceptions.HXLProxyException('hxl proxy error/exception')
 
     def push_information_back_to_ckan(self, fs_check_info_dict: dict, sheet_changes: list, state: str = STATE_SUCCESS, message: str = "File structure check completed"):
-
         if self.resource_update_api and self.api_key:
             try:
                 # fs_check_info_json = json.dumps(fs_check_info_dict)
                 if 'details' in fs_check_info_dict:
                     fs_check_info_dict['details'] = fs_check_info_dict['details'].replace("http://hxl:5000", "")
+                if 'url_or_filename' in fs_check_info_dict:
+                    fs_check_info_dict['url_or_filename'] = fs_check_info_dict["url_or_filename"].replace("http://ckan:5000", "", 1)
                 data_json = json.dumps({
                     'id': self.resource_id,
                     'package_id': self.dataset_id,
@@ -119,7 +121,7 @@ class FSCheckTask(object):
                         "hxl_proxy_response": fs_check_info_dict
                     }
                 })
-                logger.debug('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id,
+                logger.info('Before pushing to CKAN following information for resource {}: {}'.format(self.resource_id,
                                                                                                        data_json))
                 headers = {'content-type': 'application/json'}
                 headers.update(self.headers_for_ckan)
@@ -128,7 +130,7 @@ class FSCheckTask(object):
                                   headers=headers,
                                   verify=self.verify_ckan_ssl)
                 logger.info(
-                    'Pushed to CKAN fs_check_info for resource {}. Result is: {}'.format(self.resource_id, r.json()))
+                    'Pushed to CKAN with state {} fs_check_info for resource {}. Result is: {}'.format(state, self.resource_id, r.json()))
             except Exception as e:
                 logger.error(str(e))
         else:

@@ -3,7 +3,9 @@ import logging
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
-from typing import Set, Dict, Callable, Tuple, List
+from typing import Set, Dict, Callable, Tuple, List, Any
+
+import requests
 
 from eventapi.helpers.stream_redis import stream_events_to_redis
 from eventapi.helpers.helpers import get_date_from_concat_str, get_frequency_by_value, get_license_name_by_value, \
@@ -37,6 +39,12 @@ RESOURCE_FIELDS = {'name', 'format', 'description', 'microdata', 'resource_type'
 SPREADSHEET_FIELDS = {'nrows', 'ncols', 'header_hash', 'hashtag_hash', 'hxl_header_hash', 'name', 'has_merged_cells'}
 
 MARKDOWN_FIELDS = ['notes', 'license_other', 'methodology_other', 'description', 'caveats']
+
+FS_CHECK_SUPPORTED_FORMATS = {"csv", "xls", "xlsx"}
+FS_CHECK_TRIGGER_EVENTS = {
+    EVENT_TYPE_RESOURCE_CREATED,
+    EVENT_TYPE_RESOURCE_DATA_CHANGED,
+}
 
 @dataclass
 class Event(object):
@@ -75,9 +83,11 @@ def detect_changes(task_arguments) -> List[Event]:
      Also mixpanel_token depends on the flag send_mixpanel
     :type task_arguments: dict
     '''
+
     username = task_arguments['username']
     old_dataset_dict = task_arguments['old_dataset_dict']
     new_dataset_dict = task_arguments['new_dataset_dict']
+    config = task_arguments.get('config')
 
     detector = DatasetChangeDetector(username, old_dataset_dict, new_dataset_dict)
     detector.detect_changes()
@@ -90,10 +100,51 @@ def detect_changes(task_arguments) -> List[Event]:
             log.info(json.dumps(event_list, indent=4))
             stream_events_to_redis(event_list)
             # stream_events_to_eventbridge(event_list)
+            trigger_fs_check(event_list, new_dataset_dict, config)
         except Exception as e:
             log.error(str(e))
 
     return detector.change_events
+
+
+def trigger_fs_check(event_list: list[dict[str, Any]], new_dataset_dict, config):
+    for event in event_list:
+        if event.get("event_type") not in FS_CHECK_TRIGGER_EVENTS:
+            continue
+        resource_id = event.get("resource_id")
+        if not resource_id:
+            log.warning(f"Event {event.get('event_type')} missing resource_id, skipping file structure check")
+            continue
+        resource_dict = next(
+            (
+                r
+                for r in new_dataset_dict.get("resources", [])
+                if r.get("id") == resource_id
+            ),
+            None,
+        )
+        if not resource_dict:
+            log.warning(f"Resource {resource_id} not found in dataset, skipping file structure check")
+            continue
+
+        fmt = (resource_dict.get("format") or "").lower()
+        if fmt in FS_CHECK_SUPPORTED_FORMATS:
+            try:
+                log.info(f"Triggering file structure check for resource {resource_id} (format: {fmt})")
+                headers = {'content-type': 'application/json'}
+                data_json = json.dumps(
+                    {
+                        'dataset_id': resource_dict.get('package_id'),
+                        'resource_id': resource_id,
+                        'hxl_proxy_source_info_url': config.get('hxl_proxy_source_info_url').format(dataset_id=resource_dict.get('package_id'), resource_id=resource_dict.get('id')),
+                        'fs_check_info': resource_dict.get('fs_check_info'),
+                    }
+                )
+                url = config.get('gislayer_fs_check_url')
+                r = requests.post(url, data=data_json, headers=headers)
+                # resource_fs_check_enqueue(resource_dict)
+            except Exception as e:
+                log.error(f"Failed to trigger file structure check for resource {resource_id}: {str(e)}", exc_info=True)
 
 
 #     post_changes(event_list)
