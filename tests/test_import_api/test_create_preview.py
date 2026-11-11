@@ -13,7 +13,7 @@ GEOFILE_PATH = '/srv/gislayer/tests/geofiles/{}'
 def args(app):
     args = {
         'verify_ckan_ssl': app.config.get('VERIFY_CKAN_SSL'),
-        'ckan_server_url': app.config.get('CKAN_SERVER_URL'),
+        'ckan_base_url': app.config.get('CKAN_BASE_URL'),
         'logging_config': app.config.get('LOGGING_CONF_FILE'),
         'download_chunk_size': app.config.get('DOWNLOAD_CHUNK_SIZE_MB'),
         'max_file_size_mb': app.config.get('MAX_FILE_SIZE_MB'),

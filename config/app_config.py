@@ -17,6 +17,9 @@ class Config(object):
 
     GIS_API_PATTERN = 'http://localhost/services/tables/{table_name}'
 
+    # Base url of CKAN, used to download uploaded resources (the api key is only ever sent here)
+    CKAN_BASE_URL = 'http://172.17.42.1:5000'
+
     # Base url need to build calls to CKAN API
     CKAN_API_BASE_URL = 'http://172.17.42.1:5000/api/action'
 
@@ -47,7 +50,6 @@ class Config(object):
     # How long can a worker work on a task
     RQ_WORKER_TIMEOUT = 300
 
-    CKAN_SERVER_URL = 'replace.with.url.of.ckan.server'
     VERIFY_CKAN_SSL = True
 
     # Path to json config file for checks
