@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -18,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 accepted_extensions = ['json', 'geojson', 'zip', 'kml', 'kmz']
 
+CKAN_DOWNLOAD_URL_PATTERN = '{ckan_base_url}/dataset/{dataset_id}/resource/{resource_id}/download'
+CKAN_ID_PATTERN = re.compile(r'[A-Za-z0-9_-]+')
+
 
 def create_preview_task(task_arguments):
     task = CreatePreviewTask(task_arguments)
@@ -30,7 +34,7 @@ class CreatePreviewTask(object):
         self.resource_id = args['resource_id']
         self.download_url = args['download_url']
         self.verify_ckan_ssl = args['verify_ckan_ssl']
-        self.ckan_server_url = args['ckan_server_url']
+        self.ckan_base_url = args['ckan_base_url']
         self.url_type = args['url_type']
         self.download_chunk_size = args['download_chunk_size']
         self.max_file_size = args['max_file_size_mb']
@@ -93,8 +97,9 @@ class CreatePreviewTask(object):
 
         # timeout for both setting up a connection and reading first byte is 12 sec
         r = None
-        if self.ckan_server_url in self.download_url:  # if URL is on the CKAN site
-            r = requests.get(self.download_url, stream=True, timeout=12, verify=self.verify_ckan_ssl,
+        if self.url_type == 'upload':  # if the file was uploaded to the CKAN site
+            # The api key is only sent to a URL built from our own config, never to self.download_url
+            r = requests.get(self._build_ckan_download_url(), stream=True, timeout=12, verify=self.verify_ckan_ssl,
                              headers=self.headers_for_ckan)
         else:
             r = requests.get(self.download_url, stream=True, timeout=12)
@@ -166,17 +171,22 @@ class CreatePreviewTask(object):
             logger.error(msg)
             raise exceptions.FolderCreationException(msg, [e])
 
+    def _build_ckan_download_url(self):
+        for ckan_id in (self.dataset_id, self.resource_id):
+            if not CKAN_ID_PATTERN.fullmatch(ckan_id):
+                raise ValueError('Invalid dataset or resource id')
+        return CKAN_DOWNLOAD_URL_PATTERN.format(ckan_base_url=self.ckan_base_url, dataset_id=self.dataset_id,
+                                                resource_id=self.resource_id)
+
     def _get_filename(self, response):
-        header_filename = response.headers.get('content-disposition')
-        if header_filename:
-            file_name = header_filename.split("filename=")[-1]
-            return file_name.replace('"', '')
-        else:
-            split_url = urlparse.urlsplit(self.download_url)
-            if split_url.path:
-                file_name = os.path.basename(split_url.path)
-                if file_name.split(".")[-1].lower() in accepted_extensions:
-                    return file_name
+        # The remote filename is only used for finding an accepted extension, it never becomes part of the path
+        header_filename = re.search(r'filename\*?=([^;]+)', response.headers.get('content-disposition') or '')
+        candidates = [header_filename.group(1)] if header_filename else []
+        candidates += [urlparse.urlsplit(url).path for url in (response.url, self.download_url)]
+        for candidate in candidates:
+            extension = candidate.strip().strip('"').split('.')[-1].lower()
+            if extension in accepted_extensions:
+                return 'layer.' + extension
         raise ValueError('CKAN resource filename could not be deduced')
 
     def push_file_to_postgis(self, filepath, resource_id, solution=None):

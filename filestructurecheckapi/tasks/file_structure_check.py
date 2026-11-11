@@ -28,7 +28,6 @@ class FSCheckTask(object):
         self.dataset_id = args.get('dataset_id')
         self.resource_id = args.get('resource_id')
         self.verify_ckan_ssl = args.get('verify_ckan_ssl')
-        # self.ckan_server_url = args.get('ckan_server_url')
         self.timeout = args.get('timeout_sec')
         self.hxl_proxy_source_info_url = args.get('hxl_proxy_source_info_url')
         self.fs_check_info = args.get(KEY_FS_CHECK_INFO)
